@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 toy_api = "toy_api.cli:main"
+toy_api_v2 = "toy_api.configurable_cli:main"
 
 [tool.setuptools]
 packages = ["toy_api"]
@@ -26,3 +27,4 @@ toy_api = { path = ".", editable = true }
 
 [tool.pixi.tasks]
 toy_api = "toy_api"
+toy_api_v2 = "toy_api_v2"

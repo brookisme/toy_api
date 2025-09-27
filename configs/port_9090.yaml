@@ -1,0 +1,54 @@
+name: "toy-api-9090"
+description: "Toy API for testing allowed routes whitelist - Limited endpoints"
+port: 9090
+
+routes:
+  # Only the routes that match the whitelist in test_project
+  - path: "/users"
+    methods: ["GET"]
+    response: "user_list"
+
+  - path: "/users/<user_id>"
+    methods: ["GET"]
+    response: "user_detail"
+
+  - path: "/users/<user_id>/profile"
+    methods: ["GET"]
+    response: "user_profile"
+
+  - path: "/users/<user_id>/posts"
+    methods: ["GET"]
+    response: "user_posts"
+
+  - path: "/posts"
+    methods: ["GET"]
+    response: "post_list"
+
+  - path: "/posts/<post_id>"
+    methods: ["GET"]
+    response: "post_detail"
+
+  - path: "/health"
+    methods: ["GET"]
+    response: "health_check"
+
+  # Additional routes that should be blocked by api-box whitelist
+  - path: "/users/<user_id>/settings"
+    methods: ["GET"]
+    response: "user_settings"
+
+  - path: "/users/<user_id>/permissions"
+    methods: ["GET"]
+    response: "user_permissions"
+
+  - path: "/admin"
+    methods: ["GET"]
+    response: "admin_dashboard"
+
+  - path: "/admin/<admin_id>"
+    methods: ["GET"]
+    response: "admin_detail"
+
+  - path: "/system/<system_id>/config"
+    methods: ["GET"]
+    response: "system_config"

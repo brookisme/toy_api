@@ -1,0 +1,34 @@
+name: "toy-api-1234"
+description: "Toy API for testing custom route mapping - Different endpoint structure"
+port: 1234
+
+routes:
+  # Different endpoint structure to test custom route mapping
+  - path: "/user-permissions/<user_id>"
+    methods: ["GET"]
+    response: "user_permissions"
+
+  - path: "/users/<user_id>"
+    methods: ["GET"]
+    response: "user_detail"
+
+  - path: "/profiles/<user_id>"
+    methods: ["GET"]
+    response: "user_profile"
+
+  # Additional routes for testing
+  - path: "/users"
+    methods: ["GET"]
+    response: "user_list"
+
+  - path: "/users/<user_id>/settings"
+    methods: ["GET"]
+    response: "user_settings"
+
+  - path: "/users/<user_id>/delete"
+    methods: ["DELETE"]
+    response: "user_detail"
+
+  - path: "/health"
+    methods: ["GET"]
+    response: "health_check"

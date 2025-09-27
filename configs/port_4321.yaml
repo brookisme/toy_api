@@ -1,0 +1,60 @@
+name: "toy-api-4321"
+description: "Toy API for testing route restrictions - Basic routes"
+port: 4321
+
+routes:
+  # Basic user routes
+  - path: "/users"
+    methods: ["GET"]
+    response: "user_list"
+
+  - path: "/users/<user_id>"
+    methods: ["GET"]
+    response: "user_detail"
+
+  - path: "/users/<user_id>/profile"
+    methods: ["GET"]
+    response: "user_profile"
+
+  - path: "/users/<user_id>/permissions"
+    methods: ["GET"]
+    response: "user_permissions"
+
+  - path: "/users/<user_id>/settings"
+    methods: ["GET"]
+    response: "user_settings"
+
+  - path: "/users/<user_id>/delete"
+    methods: ["DELETE"]
+    response: "user_detail"
+
+  - path: "/users/<user_id>/private"
+    methods: ["GET"]
+    response: "user_private"
+
+  # Admin routes
+  - path: "/admin"
+    methods: ["GET"]
+    response: "admin_dashboard"
+
+  - path: "/admin/<admin_id>"
+    methods: ["GET"]
+    response: "admin_detail"
+
+  - path: "/admin/dashboard"
+    methods: ["GET"]
+    response: "admin_dashboard"
+
+  - path: "/admin/<admin_id>/dangerous"
+    methods: ["GET", "POST"]
+    response: "admin_dangerous"
+
+  # System routes
+  - path: "/system/<system_id>/config"
+    methods: ["GET"]
+    response: "system_config"
+
+  # Health check
+  - path: "/health"
+    methods: ["GET"]
+    response: "health_check"
