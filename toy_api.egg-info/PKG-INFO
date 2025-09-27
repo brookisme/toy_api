@@ -1,0 +1,6 @@
+Metadata-Version: 2.4
+Name: toy_api
+Version: 0.0.1
+Description-Content-Type: text/markdown
+Requires-Dist: flask
+Requires-Dist: click

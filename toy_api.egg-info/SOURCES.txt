@@ -1,0 +1,10 @@
+pyproject.toml
+toy_api/__init__.py
+toy_api/app.py
+toy_api/cli.py
+toy_api.egg-info/PKG-INFO
+toy_api.egg-info/SOURCES.txt
+toy_api.egg-info/dependency_links.txt
+toy_api.egg-info/entry_points.txt
+toy_api.egg-info/requires.txt
+toy_api.egg-info/top_level.txt

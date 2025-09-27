@@ -94,11 +94,12 @@ def _add_routes(app: Flask) -> None:
         app: Flask application instance.
     """
 
+    @app.route("/users", methods=["GET"])
     @app.route("/users/", methods=["GET"])
-    def list_users() -> Dict[str, List[str]]:
+    def list_users() -> List[str]:
         """List all user IDs."""
         users_data = app.config['USERS_DATA']
-        return {"user_ids": list(users_data.keys())}
+        return list(users_data.keys())
 
     @app.route("/users/<user_id>", methods=["GET"])
     def get_user(user_id: str) -> Dict[str, Any]:
@@ -153,14 +154,14 @@ def _add_routes(app: Flask) -> None:
         return {"message": f"User {user_id} deleted", "deleted_user": deleted_user}
 
     @app.route("/users/<user_id>/permissions", methods=["GET"])
-    def get_user_permissions(user_id: str) -> Dict[str, Any]:
+    def get_user_permissions(user_id: str) -> List[str]:
         """Get user permissions by ID."""
         users_data = app.config['USERS_DATA']
 
         if user_id not in users_data:
             return {"error": f"User {user_id} not found"}, 404
 
-        return {"user_id": user_id, "permissions": users_data[user_id]["permissions"]}
+        return users_data[user_id]["permissions"]
 
     @app.route("/users/<user_id>/permissions", methods=["POST"])
     def update_user_permissions(user_id: str) -> Dict[str, Any]:
