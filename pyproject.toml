@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toy_api"
+version = "0.0.1"
+readme = "README.md"
+dependencies = [
+    "flask",
+    "click"
+]
+
+[project.scripts]
+toy_api = "toy_api.cli:main"
+
+[tool.setuptools]
+packages = ["toy_api"]
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[tool.pixi.pypi-dependencies]
+toy_api = { path = ".", editable = true }
