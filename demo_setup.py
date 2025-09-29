@@ -25,10 +25,10 @@ def show_configurations():
     print()
 
     configs = [
-        "configs/toy_api_v1.yaml",
-        "configs/toy_api_v2.yaml",
-        "configs/toy_api_v3.yaml",
-        "configs/toy_api_v4.yaml"
+        "configs/v1.yaml",
+        "configs/v2.yaml",
+        "configs/v3.yaml",
+        "configs/v4.yaml"
     ]
 
     for config_path in configs:
@@ -55,17 +55,17 @@ def show_configurations():
             print()
 
     print("🧪 Test Project Route Mapping:")
-    print("   remote_4321 → toy_api_v2.yaml (Basic routes)")
-    print("   another_name → toy_api_v1.yaml (Custom mappings)")
-    print("   restricted_remote → toy_api_v3.yaml (Security testing)")
-    print("   allowed_routes_remote → toy_api_v4.yaml (Whitelist testing)")
+    print("   remote_4321 → v2.yaml (Basic routes)")
+    print("   another_name → v1.yaml (Custom mappings)")
+    print("   restricted_remote → v3.yaml (Security testing)")
+    print("   allowed_routes_remote → v4.yaml (Whitelist testing)")
     print()
 
     print("🚀 To start APIs:")
-    print("   toy_api toy_api_v2")
-    print("   toy_api toy_api_v1")
-    print("   toy_api toy_api_v3")
-    print("   toy_api toy_api_v4")
+    print("   toy_api v1  # Default - Custom mappings (port 1234)")
+    print("   toy_api v2  # Basic routes (port 4321)")
+    print("   toy_api v3  # Security testing (port 8080)")
+    print("   toy_api v4  # Whitelist testing (port 9090)")
     print()
 
     print("🧪 To test route restrictions:")

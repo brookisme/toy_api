@@ -21,10 +21,10 @@ from typing import Dict, List
 # CONSTANTS
 #
 API_CONFIGS = [
-    {"name": "toy-api-v2", "port": 4321, "config": "configs/toy_api_v2.yaml"},
-    {"name": "toy-api-v1", "port": 1234, "config": "configs/toy_api_v1.yaml"},
-    {"name": "toy-api-v3", "port": 8080, "config": "configs/toy_api_v3.yaml"},
-    {"name": "toy-api-v4", "port": 9090, "config": "configs/toy_api_v4.yaml"},
+    {"name": "toy-api-v1", "port": 1234, "config": "configs/v1.yaml"},
+    {"name": "toy-api-v2", "port": 4321, "config": "configs/v2.yaml"},
+    {"name": "toy-api-v3", "port": 8080, "config": "configs/v3.yaml"},
+    {"name": "toy-api-v4", "port": 9090, "config": "configs/v4.yaml"},
 ]
 
 
@@ -82,10 +82,10 @@ def main() -> None:
     """Main test function."""
     print("Configurable Toy API Test Suite")
     print("\nMake sure to start the APIs first:")
-    print("  toy_api toy_api_v2")
-    print("  toy_api toy_api_v1")
-    print("  toy_api toy_api_v3")
-    print("  toy_api toy_api_v4")
+    print("  toy_api v1  # Default - Custom mappings (port 1234)")
+    print("  toy_api v2  # Basic routes (port 4321)")
+    print("  toy_api v3  # Security testing (port 8080)")
+    print("  toy_api v4  # Whitelist testing (port 9090)")
     print()
 
     input("Press Enter when APIs are running...")

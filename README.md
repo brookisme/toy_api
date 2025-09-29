@@ -22,11 +22,11 @@ Toy API allows you to define API routes and responses through YAML configuration
 # Install toy_api in your Python environment
 pip install toy_api
 
-# Run with default config (toy_api_v1)
+# Run with default config (v1)
 toy_api
 
 # Run with specific config
-toy_api toy_api_v2
+toy_api v2
 
 # List available configs
 toy_api --list-configs
@@ -52,16 +52,16 @@ toy_api my_custom_config
 toy_api
 
 # Use specific package config
-toy_api toy_api_v2
+toy_api v2
 
 # Use local project config (if exists)
 toy_api my_custom_api
 
 # Override port
-toy_api toy_api_v3 --port 5000
+toy_api v3 --port 5000
 
 # Debug mode
-toy_api toy_api_v4 --debug
+toy_api v4 --debug
 ```
 
 ### 3. Test the API
@@ -117,8 +117,8 @@ Toy API uses a smart configuration discovery system:
 ### Usage Patterns
 
 ```bash
-# Without config name - uses default (toy_api_v1)
-toy_api                    # → toy_api_configs/toy_api_v1.yaml OR package toy_api_v1.yaml
+# Without config name - uses default (v1)
+toy_api                    # → toy_api_configs/v1.yaml OR package v1.yaml
 
 # With config name - searches both locations
 toy_api my_config          # → toy_api_configs/my_config.yaml OR package my_config.yaml
@@ -141,10 +141,10 @@ toy_api --init-configs     # Creates ./toy_api_configs/
 
 ### Available Configurations
 
-1. **`toy_api_v2.yaml`** - Basic API with all route types for comprehensive testing (port 4321)
-2. **`toy_api_v1.yaml`** - Custom endpoint structure for testing route mapping (port 1234)
-3. **`toy_api_v3.yaml`** - Security-focused API for testing restrictions (port 8080)
-4. **`toy_api_v4.yaml`** - Limited endpoints for testing allowed routes whitelist (port 9090)
+1. **`v1.yaml`** - Custom endpoint structure for testing route mapping (port 1234)
+2. **`v2.yaml`** - Basic API with all route types for comprehensive testing (port 4321)
+3. **`v3.yaml`** - Security-focused API for testing restrictions (port 8080)
+4. **`v4.yaml`** - Limited endpoints for testing allowed routes whitelist (port 9090)
 
 ### Configuration Format
 
@@ -191,17 +191,17 @@ These configurations are designed to work with the route restrictions test in th
 ### 1. Start the Toy APIs
 
 ```bash
-# Terminal 1: Basic API (port 4321)
-toy_api toy_api_v2
+# Terminal 1: Custom mapping API (port 1234) - DEFAULT
+toy_api v1
 
-# Terminal 2: Custom mapping API (port 1234)
-toy_api toy_api_v1
+# Terminal 2: Basic API (port 4321)
+toy_api v2
 
 # Terminal 3: Restricted API (port 8080)
-toy_api toy_api_v3
+toy_api v3
 
 # Terminal 4: Whitelist API (port 9090)
-toy_api toy_api_v4
+toy_api v4
 ```
 
 ### 2. Test Route Restrictions

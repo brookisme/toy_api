@@ -197,7 +197,7 @@ def list_available_configs() -> None:
         print()
 
     print("Usage:")
-    print(f"  toy_api                    # Use default (toy_api_v1)")
+    print(f"  toy_api                    # Use default (v1)")
     print(f"  toy_api <config_name>      # Use specific config")
     print(f"  toy_api --init-configs     # Create toy_api_configs/ directory")
 

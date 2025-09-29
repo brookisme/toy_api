@@ -21,7 +21,7 @@ from typing import Optional
 #
 LOCAL_CONFIG_DIR: str = "toy_api_configs"
 PACKAGE_CONFIG_DIR: str = "configs"
-DEFAULT_CONFIG_NAME: str = "toy_api_v1"
+DEFAULT_CONFIG_NAME: str = "v1"
 
 
 #
