@@ -1,0 +1,34 @@
+{
+  "name": "toy-api-v1",
+  "description": "Toy API (v1): Different endpoint structure",
+  "routes": [
+    {
+      "path": "/user-permissions/<user_id>",
+      "methods": ["GET"]
+    },
+    {
+      "path": "/users/<user_id>",
+      "methods": ["GET"]
+    },
+    {
+      "path": "/profiles/<user_id>",
+      "methods": ["GET"]
+    },
+    {
+      "path": "/users",
+      "methods": ["GET"]
+    },
+    {
+      "path": "/users/<user_id>/settings",
+      "methods": ["GET"]
+    },
+    {
+      "path": "/users/<user_id>/delete",
+      "methods": ["DELETE"]
+    },
+    {
+      "path": "/health",
+      "methods": ["GET"]
+    }
+  ]
+}
