@@ -2,7 +2,7 @@
 
 Flask Application for Toy API
 
-Simple API with user management endpoints for testing API Box.
+YAML-configurable API with dummy data for testing API Box route restrictions.
 
 License: CC-BY-4.0
 
@@ -11,48 +11,41 @@ License: CC-BY-4.0
 #
 # IMPORTS
 #
-import random
-import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from flask import Flask, jsonify, request
+import yaml
+from flask import Flask, jsonify
 
-
-#
-# CONSTANTS
-#
-DEFAULT_PERMISSIONS: List[str] = ["read", "write", "execute"]
-FIRST_NAMES: List[str] = [
-    "Alice", "Bob", "Charlie", "Diana", "Edward", "Fiona", "George", "Helen",
-    "Ian", "Julia", "Kevin", "Luna", "Mark", "Nina", "Oscar", "Paula"
-]
-LAST_NAMES: List[str] = [
-    "Anderson", "Brown", "Chen", "Davis", "Evans", "Foster", "Garcia", "Harris",
-    "Jackson", "Kim", "Lopez", "Miller", "Nelson", "Parker", "Quinn", "Rodriguez"
-]
+from toy_api.constants import DEFAULT_CONFIG_PATH
+from toy_api.response_generator import generate_response
 
 
 #
 # PUBLIC
 #
-def create_app(port: int = 8000, nb_users: int = 5) -> Flask:
-    """Create and configure the Flask application.
+def create_app(config_path: Optional[str] = None) -> Flask:
+    """Create a Flask app configured from YAML file.
 
     Args:
-        port: Port number to include in usernames.
-        nb_users: Number of users to create.
+        config_path: Path to YAML configuration file.
 
     Returns:
         Configured Flask application.
     """
     app = Flask(__name__)
 
-    # Initialize users data
-    users_data = _generate_users(port, nb_users)
-    app.config['USERS_DATA'] = users_data
+    # Load configuration
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_PATH
 
-    # Add routes
-    _add_routes(app)
+    try:
+        config = _load_config(config_path)
+    except FileNotFoundError:
+        # Use default configuration if file not found
+        config = _get_default_config()
+
+    # Register routes from config
+    _register_routes(app, config)
 
     return app
 
@@ -60,152 +53,85 @@ def create_app(port: int = 8000, nb_users: int = 5) -> Flask:
 #
 # INTERNAL
 #
-def _generate_users(port: int, nb_users: int) -> Dict[str, Dict[str, Any]]:
-    """Generate random users data.
+def _load_config(config_path: str) -> Dict[str, Any]:
+    """Load configuration from YAML file.
 
     Args:
-        port: Port number to include in usernames.
-        nb_users: Number of users to generate.
+        config_path: Path to YAML configuration file.
 
     Returns:
-        Dictionary mapping user_id to user data.
+        Configuration dictionary.
+
+    Raises:
+        FileNotFoundError: If config file doesn't exist.
+        yaml.YAMLError: If config file is invalid YAML.
     """
-    users = {}
-
-    for _ in range(nb_users):
-        user_id = str(uuid.uuid4())
-        first_name = random.choice(FIRST_NAMES)
-        last_name = random.choice(LAST_NAMES)
-        name = f"{first_name} {last_name}--{port}"
-
-        users[user_id] = {
-            "user_id": user_id,
-            "name": name,
-            "permissions": DEFAULT_PERMISSIONS.copy()
-        }
-
-    return users
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file) or {}
 
 
-def _add_routes(app: Flask) -> None:
-    """Add API routes to the Flask app.
+def _get_default_config() -> Dict[str, Any]:
+    """Get default configuration with basic routes.
+
+    Returns:
+        Default configuration dictionary.
+    """
+    return {
+        "name": "default-toy-api",
+        "description": "Default toy API with basic routes",
+        "port": 8000,
+        "routes": [
+            {"path": "/", "methods": ["GET"], "response": "api_info"},
+            {"path": "/users", "methods": ["GET"], "response": "user_list"},
+            {"path": "/users/<user_id>", "methods": ["GET"], "response": "user_detail"},
+            {"path": "/health", "methods": ["GET"], "response": "health_check"},
+        ]
+    }
+
+
+def _register_routes(app: Flask, config: Dict[str, Any]) -> None:
+    """Register routes from configuration.
 
     Args:
         app: Flask application instance.
+        config: Configuration dictionary.
     """
+    # Register API info endpoint
+    @app.route("/")
+    def api_info():
+        return jsonify({
+            "name": config.get("name", "toy-api"),
+            "description": config.get("description", "YAML-configurable toy API"),
+            "version": "2.0",
+            "routes": [route["path"] for route in config.get("routes", [])]
+        })
 
-    @app.route("/users", methods=["GET"])
-    @app.route("/users/", methods=["GET"])
-    def list_users() -> List[str]:
-        """List all user IDs."""
-        users_data = app.config['USERS_DATA']
-        return list(users_data.keys())
+    # Register configured routes
+    for route_config in config.get("routes", []):
+        path = route_config["path"]
+        methods = route_config.get("methods", ["GET"])
+        response_type = route_config["response"]
 
-    @app.route("/users/<user_id>", methods=["GET"])
-    def get_user(user_id: str) -> Dict[str, Any]:
-        """Get user data by ID."""
-        users_data = app.config['USERS_DATA']
+        # Create handler function
+        handler = _create_route_handler(response_type, path)
 
-        if user_id not in users_data:
-            return {"error": f"User {user_id} not found"}, 404
+        # Register route with unique endpoint name
+        endpoint_name = f"route_{path.replace('/', '_').replace('<', '').replace('>', '')}"
+        app.add_url_rule(path, endpoint=endpoint_name, view_func=handler, methods=methods)
 
-        return users_data[user_id]
 
-    @app.route("/users/<user_id>", methods=["POST"])
-    def create_user(user_id: str) -> Dict[str, Any]:
-        """Create or update user from posted data."""
-        users_data = app.config['USERS_DATA']
+def _create_route_handler(response_type: str, path: str):
+    """Create a handler function for a route.
 
-        try:
-            user_data = request.get_json()
-            if not user_data:
-                return {"error": "No JSON data provided"}, 400
+    Args:
+        response_type: Type of response to generate.
+        path: Route path for context.
 
-            # Validate required fields
-            if "name" not in user_data:
-                return {"error": "Name is required"}, 400
+    Returns:
+        Handler function that returns JSON response.
+    """
+    def handler(**kwargs):
+        response_data = generate_response(response_type, kwargs, path)
+        return jsonify(response_data)
 
-            # Set defaults
-            new_user = {
-                "user_id": user_id,
-                "name": user_data["name"],
-                "permissions": user_data.get("permissions", DEFAULT_PERMISSIONS.copy())
-            }
-
-            users_data[user_id] = new_user
-            app.config['USERS_DATA'] = users_data
-
-            return new_user
-
-        except Exception as e:
-            return {"error": f"Invalid request: {str(e)}"}, 400
-
-    @app.route("/users/<user_id>/delete", methods=["POST"])
-    def delete_user(user_id: str) -> Dict[str, Any]:
-        """Delete user by ID."""
-        users_data = app.config['USERS_DATA']
-
-        if user_id not in users_data:
-            return {"error": f"User {user_id} not found"}, 404
-
-        deleted_user = users_data.pop(user_id)
-        app.config['USERS_DATA'] = users_data
-
-        return {"message": f"User {user_id} deleted", "deleted_user": deleted_user}
-
-    @app.route("/users/<user_id>/permissions", methods=["GET"])
-    def get_user_permissions(user_id: str) -> List[str]:
-        """Get user permissions by ID."""
-        users_data = app.config['USERS_DATA']
-
-        if user_id not in users_data:
-            return {"error": f"User {user_id} not found"}, 404
-
-        return users_data[user_id]["permissions"]
-
-    @app.route("/users/<user_id>/permissions", methods=["POST"])
-    def update_user_permissions(user_id: str) -> Dict[str, Any]:
-        """Update user permissions from posted data."""
-        users_data = app.config['USERS_DATA']
-
-        if user_id not in users_data:
-            return {"error": f"User {user_id} not found"}, 404
-
-        try:
-            data = request.get_json()
-            if not data or "permissions" not in data:
-                return {"error": "Permissions list is required"}, 400
-
-            permissions = data["permissions"]
-            if not isinstance(permissions, list):
-                return {"error": "Permissions must be a list"}, 400
-
-            users_data[user_id]["permissions"] = permissions
-            app.config['USERS_DATA'] = users_data
-
-            return {
-                "user_id": user_id,
-                "permissions": permissions,
-                "message": "Permissions updated successfully"
-            }
-
-        except Exception as e:
-            return {"error": f"Invalid request: {str(e)}"}, 400
-
-    @app.route("/", methods=["GET"])
-    def root() -> Dict[str, Any]:
-        """Return API description."""
-        users_data = app.config['USERS_DATA']
-        return {
-            "name": "Toy API",
-            "description": "Simple API for testing API Box",
-            "total_users": len(users_data),
-            "endpoints": [
-                "GET /users/ - List user IDs",
-                "GET /users/<user_id> - Get user data",
-                "POST /users/<user_id> - Create/update user",
-                "POST /users/<user_id>/delete - Delete user",
-                "GET /users/<user_id>/permissions - Get user permissions",
-                "POST /users/<user_id>/permissions - Update user permissions"
-            ]
-        }
+    return handler
