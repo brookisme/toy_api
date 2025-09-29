@@ -1,9 +1,9 @@
-name: "toy-api-8080"
-description: "Toy API for testing restricted routes - Security-focused"
-port: 8080
+name: "toy-api-v2"
+description: "Toy API (v2): Basic routes"
+port: 4321
 
 routes:
-  # Basic user routes (some will be restricted by api-box)
+  # Basic user routes
   - path: "/users"
     methods: ["GET"]
     response: "user_list"
@@ -32,7 +32,7 @@ routes:
     methods: ["GET"]
     response: "user_private"
 
-  # Admin routes (will be restricted)
+  # Admin routes
   - path: "/admin"
     methods: ["GET"]
     response: "admin_dashboard"
@@ -49,12 +49,12 @@ routes:
     methods: ["GET", "POST"]
     response: "admin_dangerous"
 
-  # System configuration routes (will be restricted)
+  # System routes
   - path: "/system/<system_id>/config"
     methods: ["GET"]
     response: "system_config"
 
-  # Health check (should always work)
+  # Health check
   - path: "/health"
     methods: ["GET"]
     response: "health_check"

@@ -1,5 +1,5 @@
-name: "toy-api-9090"
-description: "Toy API for testing allowed routes whitelist - Limited endpoints"
+name: "toy-api-v4"
+description: "Toy API (v4): Limited endpoints"
 port: 9090
 
 routes:

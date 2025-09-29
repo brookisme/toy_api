@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 
 from toy_api.app import create_app, _load_config
-from toy_api.constants import DEFAULT_HOST, DEFAULT_PORT
+from toy_api.constants import DEFAULT_HOST
+from toy_api.port_utils import get_port_from_config_or_auto
 
 
 #
@@ -76,20 +77,26 @@ def main() -> int:
         # Create Flask app from config
         app = create_app(args.config)
 
-        # Determine port
-        port = args.port
-        if port is None and args.config:
+        # Load config for port determination
+        config = {}
+        if args.config:
             try:
                 config = _load_config(args.config)
-                port = config.get("port", DEFAULT_PORT)
-            except Exception:
-                port = DEFAULT_PORT
-        elif port is None:
-            port = DEFAULT_PORT
+            except Exception as e:
+                print(f"Warning: Could not load config file: {e}")
 
-        print(f"Starting configurable toy API...")
+        # Determine port using smart port logic
+        port, port_message = get_port_from_config_or_auto(config, args.port, args.host)
+
+        if port == 0:
+            print(f"Error: {port_message}", file=sys.stderr)
+            return 1
+
+        print(f"Starting toy API...")
         if args.config:
             print(f"Config file: {args.config}")
+        if port_message:
+            print(f"Port: {port_message}")
         print(f"Server: http://{args.host}:{port}")
         print("Press Ctrl+C to stop")
 

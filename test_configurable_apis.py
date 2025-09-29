@@ -21,10 +21,10 @@ from typing import Dict, List
 # CONSTANTS
 #
 API_CONFIGS = [
-    {"name": "toy-api-4321", "port": 4321, "config": "configs/port_4321.yaml"},
-    {"name": "toy-api-1234", "port": 1234, "config": "configs/port_1234.yaml"},
-    {"name": "toy-api-8080", "port": 8080, "config": "configs/port_8080.yaml"},
-    {"name": "toy-api-9090", "port": 9090, "config": "configs/port_9090.yaml"},
+    {"name": "toy-api-v2", "port": 4321, "config": "configs/toy_api_v2.yaml"},
+    {"name": "toy-api-v1", "port": 1234, "config": "configs/toy_api_v1.yaml"},
+    {"name": "toy-api-v3", "port": 8080, "config": "configs/toy_api_v3.yaml"},
+    {"name": "toy-api-v4", "port": 9090, "config": "configs/toy_api_v4.yaml"},
 ]
 
 
@@ -82,10 +82,10 @@ def main() -> None:
     """Main test function."""
     print("Configurable Toy API Test Suite")
     print("\nMake sure to start the APIs first:")
-    print("  toy_api --config configs/port_4321.yaml")
-    print("  toy_api --config configs/port_1234.yaml")
-    print("  toy_api --config configs/port_8080.yaml")
-    print("  toy_api --config configs/port_9090.yaml")
+    print("  toy_api --config configs/toy_api_v2.yaml")
+    print("  toy_api --config configs/toy_api_v1.yaml")
+    print("  toy_api --config configs/toy_api_v3.yaml")
+    print("  toy_api --config configs/toy_api_v4.yaml")
     print()
 
     input("Press Enter when APIs are running...")

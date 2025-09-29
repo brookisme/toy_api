@@ -1,5 +1,5 @@
-name: "toy-api-1234"
-description: "Toy API for testing custom route mapping - Different endpoint structure"
+name: "toy-api-v1"
+description: "Toy API (v1): Different endpoint structure"
 port: 1234
 
 routes:
