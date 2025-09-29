@@ -19,8 +19,8 @@ from typing import Optional
 #
 # CONSTANTS
 #
-LOCAL_CONFIG_DIR: str = "toy_api_configs"
-PACKAGE_CONFIG_DIR: str = "configs"
+LOCAL_CONFIG_DIR: str = "toy_api_config"
+PACKAGE_CONFIG_DIR: str = "config"
 DEFAULT_CONFIG_NAME: str = "v1"
 
 

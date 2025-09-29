@@ -21,10 +21,10 @@ from typing import Dict, List
 # CONSTANTS
 #
 API_CONFIGS = [
-    {"name": "toy-api-v1", "port": 1234, "config": "configs/v1.yaml"},
-    {"name": "toy-api-v2", "port": 4321, "config": "configs/v2.yaml"},
-    {"name": "toy-api-v3", "port": 8080, "config": "configs/v3.yaml"},
-    {"name": "toy-api-v4", "port": 9090, "config": "configs/v4.yaml"},
+    {"name": "toy-api-v1", "port": 1234, "config": "config/v1.yaml"},
+    {"name": "toy-api-v2", "port": 4321, "config": "config/v2.yaml"},
+    {"name": "toy-api-v3", "port": 8080, "config": "config/v3.yaml"},
+    {"name": "toy-api-v4", "port": 9090, "config": "config/v4.yaml"},
 ]
 
 

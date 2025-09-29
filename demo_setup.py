@@ -25,10 +25,10 @@ def show_configurations():
     print()
 
     configs = [
-        "configs/v1.yaml",
-        "configs/v2.yaml",
-        "configs/v3.yaml",
-        "configs/v4.yaml"
+        "config/v1.yaml",
+        "config/v2.yaml",
+        "config/v3.yaml",
+        "config/v4.yaml"
     ]
 
     for config_path in configs:

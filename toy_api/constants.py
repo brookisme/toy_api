@@ -18,7 +18,7 @@ from typing import Any, Dict, List
 #
 # CONSTANTS
 #
-DEFAULT_CONFIG_PATH: str = "configs/v1.yaml"
+DEFAULT_CONFIG_PATH: str = "config/v1.yaml"
 DEFAULT_HOST: str = "127.0.0.1"
 DEFAULT_PORT: int = 8000
 

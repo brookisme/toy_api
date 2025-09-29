@@ -8,7 +8,6 @@ Launch configurable toy APIs from YAML configuration files.
 License: CC-BY-4.0
 
 """
-
 #
 # IMPORTS
 #
@@ -39,7 +38,7 @@ def main() -> int:
         "config",
         nargs="?",
         type=str,
-        help="Config name or path (default: toy_api_v1). Searches toy_api_configs/ then package configs/"
+        help="Config name or path (default: v1). Searches toy_api_config/ then package config/"
     )
 
     parser.add_argument(
@@ -71,7 +70,7 @@ def main() -> int:
     parser.add_argument(
         "--init-configs",
         action="store_true",
-        help="Create toy_api_configs/ directory in current project"
+        help="Create toy_api_config/ directory in current project"
     )
 
     args = parser.parse_args()
@@ -82,12 +81,12 @@ def main() -> int:
 
     if args.init_configs:
         if create_local_config_dir():
-            print(f"Created toy_api_configs/ directory")
+            print(f"Created toy_api_config/ directory")
             print("You can now copy and customize config files:")
-            print("  cp <package_configs>/*.yaml toy_api_configs/")
+            print("  cp <package_config>/*.yaml toy_api_config/")
             return 0
         else:
-            print("Error: Could not create toy_api_configs/ directory", file=sys.stderr)
+            print("Error: Could not create toy_api_config/ directory", file=sys.stderr)
             return 1
 
     try:
@@ -146,7 +145,7 @@ def list_available_configs() -> None:
 
     # Show local configs first
     if configs["local"]:
-        print("📁 Local configs (toy_api_configs/):")
+        print("📁 Local configs (toy_api_config/):")
         for config_name in sorted(configs["local"]):
             try:
                 config_path, _ = find_config_path(config_name)
@@ -167,7 +166,7 @@ def list_available_configs() -> None:
                 print(f"  {config_name} (Error loading: {e})")
                 print()
     else:
-        print("📁 Local configs (toy_api_configs/): None")
+        print("📁 Local configs (toy_api_config/): None")
         print()
 
     # Show package configs
@@ -199,7 +198,7 @@ def list_available_configs() -> None:
     print("Usage:")
     print(f"  toy_api                    # Use default (v1)")
     print(f"  toy_api <config_name>      # Use specific config")
-    print(f"  toy_api --init-configs     # Create toy_api_configs/ directory")
+    print(f"  toy_api --init-configs     # Create toy_api_config/ directory")
 
 
 if __name__ == "__main__":

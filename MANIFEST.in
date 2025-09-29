@@ -1,2 +1,2 @@
-include configs/*.yaml
+include config/*.yaml
 recursive-include toy_api *.py

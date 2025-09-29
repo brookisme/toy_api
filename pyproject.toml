@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-toy_api = "toy_api.cli:main"
+toy-api = "toy_api.cli:main"
 
 [tool.setuptools]
 packages = ["toy_api"]

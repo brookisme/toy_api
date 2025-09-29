@@ -5,87 +5,258 @@ Description-Content-Type: text/markdown
 Requires-Dist: flask
 Requires-Dist: click
 
-# Toy API
+# Toy API - Configurable Routes
 
-A simple Flask-based REST API for testing API Box functionality. This API provides user management endpoints with configurable user data generation.
+A YAML-configurable Flask API for testing API Box route restrictions and allowed routes functionality.
 
-## Description
+## Overview
 
-Toy API is a lightweight Flask application that generates random user data and provides REST endpoints for user management operations. It's designed specifically for testing API Box proxy functionality but can be used as a standalone development API.
+Toy API allows you to define API routes and responses through YAML configuration files. This makes it perfect for testing different route restriction scenarios in API Box without having to modify code.
 
 ## Features
 
-- Random user data generation with configurable parameters
-- RESTful endpoints for user CRUD operations
-- User permissions management
-- Configurable port and user count
-- Built-in Flask development server
+- **YAML-Configurable Routes**: Define endpoints, HTTP methods, and response types in YAML
+- **Smart Port Management**: Automatic port selection with availability checking
+- **Dummy Data Generation**: Automatic generation of realistic test data
+- **Multiple Configurations**: Support for different API configurations
+- **Simple Responses**: JSON responses with configurable data types
 
 ## Quick Start
 
-### Installation
-
-Requirements are managed through a [Pixi](https://pixi.sh/latest) project environment:
+### 1. Install and Use (Global Installation)
 
 ```bash
-# Install dependencies (first time only)
-pixi install
+# Install toy_api in your Python environment
+pip install toy_api
 
-# Or run directly (will install dependencies automatically)
-pixi run toy-api --help
+# Run with default config (v1)
+toy_api
+
+# Run with specific config
+toy_api v2
+
+# List available configs
+toy_api --list-configs
 ```
 
-### Basic Usage
+### 2. Project-Local Configuration
 
 ```bash
-# Start the API server with default settings (port 8000, 5 users)
-pixi run toy-api
+# Create local config directory in your project
+toy_api --init-configs
 
-# Start with custom settings
-pixi run toy-api --host 0.0.0.0 --port 8080 --nb_users 10
+# Copy and customize configs
+cp <toy_api_package>/configs/*.yaml toy_api_configs/
 
-# Run in debug mode
-pixi run toy-api --debug
+# Your local configs will override package defaults
+toy_api my_custom_config
 ```
 
-### API Endpoints
-
-Once running, the API provides the following endpoints:
-
-- `GET /` - API metadata and endpoint list
-- `GET /users/` - List all user IDs
-- `GET /users/<user_id>` - Get user data by ID
-- `POST /users/<user_id>` - Create or update user
-- `POST /users/<user_id>/delete` - Delete user
-- `GET /users/<user_id>/permissions` - Get user permissions
-- `POST /users/<user_id>/permissions` - Update user permissions
-
-### Example Usage
+### 3. Usage Examples
 
 ```bash
-# Get API info
-curl http://localhost:8000/
+# Use default config with auto-selected port
+toy_api
 
-# List users
-curl http://localhost:8000/users/
+# Use specific package config
+toy_api v2
 
-# Get specific user
-curl http://localhost:8000/users/{user-id}
+# Use local project config (if exists)
+toy_api my_custom_api
 
-# Create a new user
-curl -X POST http://localhost:8000/users/new-user-id \
-  -H "Content-Type: application/json" \
-  -d '{"name": "John Doe", "permissions": ["read", "write"]}'
+# Override port
+toy_api v3 --port 5000
+
+# Debug mode
+toy_api v4 --debug
 ```
+
+### 3. Test the API
+
+```bash
+curl http://127.0.0.1:4321/
+curl http://127.0.0.1:4321/users
+curl http://127.0.0.1:4321/users/123/profile
+```
+
+## Port Management
+
+The toy API includes smart port management:
+
+### Port Selection Priority
+
+1. **Command Line Flag**: `--port/-p` takes highest priority
+2. **Config File**: Uses `port` value from YAML config if specified
+3. **Auto-Selection**: Automatically finds available port (8000-9000 range)
+
+### Port Availability Checking
+
+- **Port Taken**: If specified port is unavailable, shows helpful error message
+- **Auto-Fallback**: If config port is taken, auto-selects alternative with notification
+- **Range Scanning**: Searches 8000-9000 range for available ports
+
+### Examples
+
+```bash
+# Use config-specified port (4321) if available
+toy_api --config configs/toy_api_v2.yaml
+
+# Force specific port (error if taken)
+toy_api --config configs/toy_api_v2.yaml --port 5000
+
+# Auto-select port when no config specified
+toy_api
+
+# See helpful error if port is taken
+toy_api --port 80  # Likely shows "Port 80 is already in use..."
+```
+
+## Configuration Discovery
+
+Toy API uses a smart configuration discovery system:
+
+### Discovery Priority
+
+1. **Local Project Configs**: `./toy_api_configs/config_name.yaml`
+2. **Package Configs**: Built-in configs from the toy_api package
+3. **Error**: Config not found in either location
+
+### Usage Patterns
+
+```bash
+# Without config name - uses default (v1)
+toy_api                    # → toy_api_configs/v1.yaml OR package v1.yaml
+
+# With config name - searches both locations
+toy_api my_config          # → toy_api_configs/my_config.yaml OR package my_config.yaml
+
+# List what's available
+toy_api --list-configs     # Shows both local and package configs
+
+# Set up local config directory
+toy_api --init-configs     # Creates ./toy_api_configs/
+```
+
+### Benefits
+
+- **Override Defaults**: Customize package configs for your project
+- **No Path Hassles**: Just use config names, not full paths
+- **Clear Priority**: Local configs always override package configs
+- **Portable**: Works from any directory once installed
+
+## Configuration Files
+
+### Available Configurations
+
+1. **`v1.yaml`** - Custom endpoint structure for testing route mapping (port 1234)
+2. **`v2.yaml`** - Basic API with all route types for comprehensive testing (port 4321)
+3. **`v3.yaml`** - Security-focused API for testing restrictions (port 8080)
+4. **`v4.yaml`** - Limited endpoints for testing allowed routes whitelist (port 9090)
+
+### Configuration Format
+
+```yaml
+name: "my-toy-api"
+description: "Description of this API configuration"
+port: 8000  # Optional: if not specified, auto-selects available port
+
+routes:
+  - path: "/users"
+    methods: ["GET"]
+    response: "user_list"
+
+  - path: "/users/<user_id>"
+    methods: ["GET", "POST"]
+    response: "user_detail"
+
+  - path: "/admin/<admin_id>/dangerous"
+    methods: ["GET", "POST"]
+    response: "admin_dangerous"
+```
+
+### Response Types
+
+- `user_list` - List of users
+- `user_detail` - Individual user data
+- `user_profile` - User profile information
+- `user_permissions` - User permission data
+- `user_posts` - User's posts
+- `user_settings` - User settings
+- `user_private` - Private user data (sensitive)
+- `post_list` - List of posts
+- `post_detail` - Individual post data
+- `admin_dashboard` - Admin dashboard data
+- `admin_detail` - Admin user data
+- `admin_dangerous` - Dangerous admin operation (should be restricted!)
+- `system_config` - System configuration (sensitive)
+- `health_check` - Health status
+
+## Testing with API Box
+
+These configurations are designed to work with the route restrictions test in the test_project:
+
+### 1. Start the Toy APIs
+
+```bash
+# Terminal 1: Custom mapping API (port 1234) - DEFAULT
+toy_api v1
+
+# Terminal 2: Basic API (port 4321)
+toy_api v2
+
+# Terminal 3: Restricted API (port 8080)
+toy_api v3
+
+# Terminal 4: Whitelist API (port 9090)
+toy_api v4
+```
+
+### 2. Test Route Restrictions
+
+```bash
+cd ../test_project
+python test_route_restrictions.py
+```
+
+### 3. Manual Testing
+
+```bash
+# These should work (allowed routes)
+curl http://localhost:8000/remote_4321/latest/users
+curl http://localhost:8000/remote_4321/latest/users/123/profile
+
+# These should be blocked (restricted routes)
+curl http://localhost:8000/remote_4321/latest/users/123/delete
+curl http://localhost:8000/restricted_remote/latest/admin/dashboard
+```
+
+## Route Mapping Examples
+
+The different configurations demonstrate:
+
+- **Global restrictions** (`users/{{}}/delete` blocked everywhere)
+- **Remote-specific restrictions** (different per API)
+- **Allowed routes whitelist** (only specific routes allowed)
+- **Custom route mapping** (different API signatures)
 
 ## Development
 
-The project follows Python best practices:
+### Adding New Response Types
 
-- Type hints throughout
-- Comprehensive docstrings
-- PEP 8 style compliance
-- Modular structure with separate CLI and app modules
+1. Add the response type to `_generate_response()` in `configurable_app.py`
+2. Create YAML configurations that use the new response type
+3. Test with the toy API and API Box
+
+### Adding New Route Patterns
+
+Simply add them to your YAML configuration file:
+
+```yaml
+routes:
+  - path: "/my/custom/<param>/route"
+    methods: ["GET", "POST"]
+    response: "my_custom_response"
+```
 
 ## License
 
