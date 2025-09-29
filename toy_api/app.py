@@ -99,12 +99,22 @@ def _register_routes(app: Flask, config: Dict[str, Any]) -> None:
     # Register API info endpoint
     @app.route("/")
     def api_info():
-        return jsonify({
-            "name": config.get("name", "toy-api"),
-            "description": config.get("description", "YAML-configurable toy API"),
-            "version": "2.0",
-            "routes": [route["path"] for route in config.get("routes", [])]
-        })
+        # Create metadata response excluding port and other sensitive info
+        metadata = {
+            "name": config.get("name", "Toy API"),
+            "description": config.get("description", "Configurable toy API server"),
+            "routes": []
+        }
+
+        # Add route information (paths and methods only, not implementation details)
+        for route_config in config.get("routes", []):
+            route_info = {
+                "path": route_config.get("path", "/"),
+                "methods": route_config.get("methods", ["GET"])
+            }
+            metadata["routes"].append(route_info)
+
+        return jsonify(metadata)
 
     # Register configured routes
     for route_config in config.get("routes", []):
