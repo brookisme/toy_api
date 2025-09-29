@@ -12,6 +12,7 @@ License: CC-BY-4.0
 # IMPORTS
 #
 import os
+import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -101,6 +102,39 @@ def create_local_config_dir() -> bool:
     try:
         Path(LOCAL_CONFIG_DIR).mkdir(exist_ok=True)
         return True
+    except Exception:
+        return False
+
+
+def init_config_with_example() -> bool:
+    """Initialize local config directory and create example.yaml from v1.yaml.
+
+    This function:
+    1. Creates toy_api_config/ directory (exists_ok=True)
+    2. Copies the package's v1.yaml to toy_api_config/example.yaml
+
+    Returns:
+        True if successful, False on error.
+    """
+    try:
+        # Step 1: Create the directory
+        local_dir = Path(LOCAL_CONFIG_DIR)
+        local_dir.mkdir(exist_ok=True)
+
+        # Step 2: Copy v1.yaml to example.yaml
+        package_dir = _get_package_config_dir()
+        if not package_dir:
+            return False
+
+        v1_source = package_dir / "v1.yaml"
+        example_target = local_dir / "example.yaml"
+
+        if not v1_source.exists():
+            return False
+
+        shutil.copy2(v1_source, example_target)
+        return True
+
     except Exception:
         return False
 
