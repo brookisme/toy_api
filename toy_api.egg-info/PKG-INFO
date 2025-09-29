@@ -46,7 +46,7 @@ toy_api --list-configs
 toy_api --init-configs
 
 # Copy and customize configs
-cp <toy_api_package>/configs/*.yaml toy_api_configs/
+cp <toy_api_package>/config/*.yaml toy_api_config/
 
 # Your local configs will override package defaults
 toy_api my_custom_config
@@ -117,31 +117,31 @@ Toy API uses a smart configuration discovery system:
 
 ### Discovery Priority
 
-1. **Local Project Configs**: `./toy_api_configs/config_name.yaml`
-2. **Package Configs**: Built-in configs from the toy_api package
+1. **Local Project Configs**: `./toy_api_config/config_name.yaml`
+2. **Package Configs**: Built-in config from the toy_api package
 3. **Error**: Config not found in either location
 
 ### Usage Patterns
 
 ```bash
 # Without config name - uses default (v1)
-toy_api                    # → toy_api_configs/v1.yaml OR package v1.yaml
+toy_api                    # → toy_api_config/v1.yaml OR package v1.yaml
 
 # With config name - searches both locations
-toy_api my_config          # → toy_api_configs/my_config.yaml OR package my_config.yaml
+toy_api my_config          # → toy_api_config/my_config.yaml OR package my_config.yaml
 
 # List what's available
 toy_api --list-configs     # Shows both local and package configs
 
 # Set up local config directory
-toy_api --init-configs     # Creates ./toy_api_configs/
+toy_api --init-configs     # Creates ./toy_api_config/
 ```
 
 ### Benefits
 
-- **Override Defaults**: Customize package configs for your project
+- **Override Defaults**: Customize package config for your project
 - **No Path Hassles**: Just use config names, not full paths
-- **Clear Priority**: Local configs always override package configs
+- **Clear Priority**: Local config always overrides package config
 - **Portable**: Works from any directory once installed
 
 ## Configuration Files
