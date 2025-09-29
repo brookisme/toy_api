@@ -18,7 +18,7 @@ from typing import Any, Dict, List
 #
 # CONSTANTS
 #
-DEFAULT_CONFIG_PATH: str = "configs/default.yaml"
+DEFAULT_CONFIG_PATH: str = "configs/toy_api_v1.yaml"
 DEFAULT_HOST: str = "127.0.0.1"
 DEFAULT_PORT: int = 8000
 

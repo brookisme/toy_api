@@ -19,6 +19,7 @@ from pathlib import Path
 from toy_api.app import create_app, _load_config
 from toy_api.constants import DEFAULT_HOST
 from toy_api.port_utils import get_port_from_config_or_auto
+from toy_api.config_discovery import find_config_path, get_available_configs, create_local_config_dir
 
 
 #
@@ -35,10 +36,10 @@ def main() -> int:
     )
 
     parser.add_argument(
-        "--config",
-        "-c",
+        "config",
+        nargs="?",
         type=str,
-        help="Path to YAML configuration file (default: configs/default.yaml)"
+        help="Config name or path (default: toy_api_v1). Searches toy_api_configs/ then package configs/"
     )
 
     parser.add_argument(
@@ -67,23 +68,47 @@ def main() -> int:
         help="List available configuration files"
     )
 
+    parser.add_argument(
+        "--init-configs",
+        action="store_true",
+        help="Create toy_api_configs/ directory in current project"
+    )
+
     args = parser.parse_args()
 
     if args.list_configs:
         list_available_configs()
         return 0
 
+    if args.init_configs:
+        if create_local_config_dir():
+            print(f"Created toy_api_configs/ directory")
+            print("You can now copy and customize config files:")
+            print("  cp <package_configs>/*.yaml toy_api_configs/")
+            return 0
+        else:
+            print("Error: Could not create toy_api_configs/ directory", file=sys.stderr)
+            return 1
+
     try:
-        # Create Flask app from config
-        app = create_app(args.config)
+        # Find config file using discovery system
+        config_path, config_message = find_config_path(args.config)
+
+        if not config_path:
+            print(f"Error: {config_message}", file=sys.stderr)
+            print("\nAvailable configs:")
+            list_available_configs()
+            return 1
+
+        # Create Flask app from discovered config
+        app = create_app(config_path)
 
         # Load config for port determination
         config = {}
-        if args.config:
-            try:
-                config = _load_config(args.config)
-            except Exception as e:
-                print(f"Warning: Could not load config file: {e}")
+        try:
+            config = _load_config(config_path)
+        except Exception as e:
+            print(f"Warning: Could not load config file: {e}")
 
         # Determine port using smart port logic
         port, port_message = get_port_from_config_or_auto(config, args.port, args.host)
@@ -93,8 +118,7 @@ def main() -> int:
             return 1
 
         print(f"Starting toy API...")
-        if args.config:
-            print(f"Config file: {args.config}")
+        print(f"Config: {config_message}")
         if port_message:
             print(f"Port: {port_message}")
         print(f"Server: http://{args.host}:{port}")
@@ -118,34 +142,64 @@ def list_available_configs() -> None:
     print("Available configuration files:")
     print()
 
-    configs_dir = Path("configs")
-    if not configs_dir.exists():
-        print("  No configs directory found")
-        return
+    configs = get_available_configs()
 
-    yaml_files = list(configs_dir.glob("*.yaml")) + list(configs_dir.glob("*.yml"))
+    # Show local configs first
+    if configs["local"]:
+        print("📁 Local configs (toy_api_configs/):")
+        for config_name in sorted(configs["local"]):
+            try:
+                config_path, _ = find_config_path(config_name)
+                if config_path:
+                    config = _load_config(config_path)
+                    name = config.get("name", "Unknown")
+                    description = config.get("description", "No description")
+                    port = config.get("port", "Auto")
+                    route_count = len(config.get("routes", []))
 
-    if not yaml_files:
-        print("  No YAML configuration files found in configs/")
-        return
+                    print(f"  {config_name}")
+                    print(f"    Name: {name}")
+                    print(f"    Description: {description}")
+                    print(f"    Port: {port}")
+                    print(f"    Routes: {route_count}")
+                    print()
+            except Exception as e:
+                print(f"  {config_name} (Error loading: {e})")
+                print()
+    else:
+        print("📁 Local configs (toy_api_configs/): None")
+        print()
 
-    for config_file in sorted(yaml_files):
-        try:
-            config = _load_config(str(config_file))
-            name = config.get("name", "Unknown")
-            description = config.get("description", "No description")
-            port = config.get("port", "Unknown")
-            route_count = len(config.get("routes", []))
+    # Show package configs
+    if configs["package"]:
+        print("📦 Package configs:")
+        for config_name in sorted(configs["package"]):
+            try:
+                config_path, _ = find_config_path(config_name)
+                if config_path:
+                    config = _load_config(config_path)
+                    name = config.get("name", "Unknown")
+                    description = config.get("description", "No description")
+                    port = config.get("port", "Auto")
+                    route_count = len(config.get("routes", []))
 
-            print(f"  {config_file.name}")
-            print(f"    Name: {name}")
-            print(f"    Description: {description}")
-            print(f"    Port: {port}")
-            print(f"    Routes: {route_count}")
-            print()
-        except Exception as e:
-            print(f"  {config_file.name} (Error loading: {e})")
-            print()
+                    print(f"  {config_name}")
+                    print(f"    Name: {name}")
+                    print(f"    Description: {description}")
+                    print(f"    Port: {port}")
+                    print(f"    Routes: {route_count}")
+                    print()
+            except Exception as e:
+                print(f"  {config_name} (Error loading: {e})")
+                print()
+    else:
+        print("📦 Package configs: None found")
+        print()
+
+    print("Usage:")
+    print(f"  toy_api                    # Use default (toy_api_v1)")
+    print(f"  toy_api <config_name>      # Use specific config")
+    print(f"  toy_api --init-configs     # Create toy_api_configs/ directory")
 
 
 if __name__ == "__main__":

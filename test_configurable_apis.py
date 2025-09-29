@@ -82,10 +82,10 @@ def main() -> None:
     """Main test function."""
     print("Configurable Toy API Test Suite")
     print("\nMake sure to start the APIs first:")
-    print("  toy_api --config configs/toy_api_v2.yaml")
-    print("  toy_api --config configs/toy_api_v1.yaml")
-    print("  toy_api --config configs/toy_api_v3.yaml")
-    print("  toy_api --config configs/toy_api_v4.yaml")
+    print("  toy_api toy_api_v2")
+    print("  toy_api toy_api_v1")
+    print("  toy_api toy_api_v3")
+    print("  toy_api toy_api_v4")
     print()
 
     input("Press Enter when APIs are running...")

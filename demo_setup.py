@@ -62,10 +62,10 @@ def show_configurations():
     print()
 
     print("🚀 To start APIs:")
-    print("   toy_api --config configs/toy_api_v2.yaml")
-    print("   toy_api --config configs/toy_api_v1.yaml")
-    print("   toy_api --config configs/toy_api_v3.yaml")
-    print("   toy_api --config configs/toy_api_v4.yaml")
+    print("   toy_api toy_api_v2")
+    print("   toy_api toy_api_v1")
+    print("   toy_api toy_api_v3")
+    print("   toy_api toy_api_v4")
     print()
 
     print("🧪 To test route restrictions:")

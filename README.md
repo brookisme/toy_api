@@ -16,26 +16,52 @@ Toy API allows you to define API routes and responses through YAML configuration
 
 ## Quick Start
 
-### 1. List Available Configurations
+### 1. Install and Use (Global Installation)
 
 ```bash
+# Install toy_api in your Python environment
+pip install toy_api
+
+# Run with default config (toy_api_v1)
+toy_api
+
+# Run with specific config
+toy_api toy_api_v2
+
+# List available configs
 toy_api --list-configs
 ```
 
-### 2. Start an API with a Specific Configuration
+### 2. Project-Local Configuration
 
 ```bash
-# Start the API with config-specified port (4321)
-toy_api --config configs/toy_api_v2.yaml
+# Create local config directory in your project
+toy_api --init-configs
 
-# Start with custom port override
-toy_api --config configs/toy_api_v1.yaml --port 5000
+# Copy and customize configs
+cp <toy_api_package>/configs/*.yaml toy_api_configs/
 
-# Start with debug mode (uses config port 8080)
-toy_api --config configs/toy_api_v3.yaml --debug
+# Your local configs will override package defaults
+toy_api my_custom_config
+```
 
-# Start without config (auto-selects available port)
+### 3. Usage Examples
+
+```bash
+# Use default config with auto-selected port
 toy_api
+
+# Use specific package config
+toy_api toy_api_v2
+
+# Use local project config (if exists)
+toy_api my_custom_api
+
+# Override port
+toy_api toy_api_v3 --port 5000
+
+# Debug mode
+toy_api toy_api_v4 --debug
 ```
 
 ### 3. Test the API
@@ -77,6 +103,39 @@ toy_api
 # See helpful error if port is taken
 toy_api --port 80  # Likely shows "Port 80 is already in use..."
 ```
+
+## Configuration Discovery
+
+Toy API uses a smart configuration discovery system:
+
+### Discovery Priority
+
+1. **Local Project Configs**: `./toy_api_configs/config_name.yaml`
+2. **Package Configs**: Built-in configs from the toy_api package
+3. **Error**: Config not found in either location
+
+### Usage Patterns
+
+```bash
+# Without config name - uses default (toy_api_v1)
+toy_api                    # → toy_api_configs/toy_api_v1.yaml OR package toy_api_v1.yaml
+
+# With config name - searches both locations
+toy_api my_config          # → toy_api_configs/my_config.yaml OR package my_config.yaml
+
+# List what's available
+toy_api --list-configs     # Shows both local and package configs
+
+# Set up local config directory
+toy_api --init-configs     # Creates ./toy_api_configs/
+```
+
+### Benefits
+
+- **Override Defaults**: Customize package configs for your project
+- **No Path Hassles**: Just use config names, not full paths
+- **Clear Priority**: Local configs always override package configs
+- **Portable**: Works from any directory once installed
 
 ## Configuration Files
 
@@ -133,16 +192,16 @@ These configurations are designed to work with the route restrictions test in th
 
 ```bash
 # Terminal 1: Basic API (port 4321)
-toy_api --config configs/toy_api_v2.yaml
+toy_api toy_api_v2
 
 # Terminal 2: Custom mapping API (port 1234)
-toy_api --config configs/toy_api_v1.yaml
+toy_api toy_api_v1
 
 # Terminal 3: Restricted API (port 8080)
-toy_api --config configs/toy_api_v3.yaml
+toy_api toy_api_v3
 
 # Terminal 4: Whitelist API (port 9090)
-toy_api --config configs/toy_api_v4.yaml
+toy_api toy_api_v4
 ```
 
 ### 2. Test Route Restrictions
