@@ -25,7 +25,7 @@ from toy_api.constants import (
     LANGUAGES,
     POST_TAGS,
     ADMIN_ACTIVITIES,
-    SILLY_JOBS
+    JOBS
 )
 
 
@@ -189,7 +189,7 @@ def _generate_user_profile(user_id: str) -> Dict[str, Any]:
         "id": user["id"],
         "name": user["name"],
         "email": user["email"],
-        "bio": f"{random.choice(SILLY_JOBS)} with {random.randint(1, 10)} years of experience",
+        "bio": f"{random.choice(JOBS)} with {random.randint(1, 10)} years of experience",
         "location": random.choice(LOCATIONS),
         "joined": "2020-01-15",
         "followers": random.randint(10, 1000),

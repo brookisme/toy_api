@@ -105,8 +105,8 @@ ADMIN_ACTIVITIES: List[str] = [
     "Cache refresh", "Database maintenance", "Log rotation", "Config update"
 ]
 
-# Silly job titles for user bios
-SILLY_JOBS: List[str] = [
+# Job titles for user bios
+JOBS: List[str] = [
     "Rainbow Chaser", "Professional Cloud Watcher", "Unicorn Trainer", "Dragon Whisperer",
     "Bubble Wrap Popper", "Professional Daydreamer", "Sock Puppet Engineer", "Chief Giggle Officer",
     "Ninja Cat Herder", "Professional Nap Taker", "Jelly Bean Sommelier", "Moonbeam Collector",
