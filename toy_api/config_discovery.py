@@ -111,7 +111,8 @@ def init_config_with_example() -> bool:
 
     This function:
     1. Creates toy_api_config/ directory (exists_ok=True)
-    2. Copies the package's v1.yaml to toy_api_config/example.yaml
+    2. Creates toy_api_config/databases/ subdirectory
+    3. Copies the package's v1.yaml to toy_api_config/example.yaml
 
     Returns:
         True if successful, False on error.
@@ -121,7 +122,11 @@ def init_config_with_example() -> bool:
         local_dir = Path(LOCAL_CONFIG_DIR)
         local_dir.mkdir(exist_ok=True)
 
-        # Step 2: Copy v1.yaml to example.yaml
+        # Step 2: Create databases subdirectory
+        databases_dir = local_dir / "databases"
+        databases_dir.mkdir(exist_ok=True)
+
+        # Step 3: Copy v1.yaml to example.yaml
         package_dir = _get_package_config_dir()
         if not package_dir:
             return False
