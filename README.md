@@ -2,13 +2,40 @@
 
 Easily configurable test API servers and dummy data generation for testing and development.
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Example](#quick-example)
+- [CLI](#cli)
+  - [Commands](#commands)
+  - [Examples](#examples)
+- [CONFIGURATION AND SYNTAX](#configuration-and-syntax)
+  - [API Configuration](#api-configuration)
+  - [Database Configuration](#database-configuration)
+- [Using Toy API in Your Own Projects](#using-toy-api-in-your-own-projects)
+  - [Basic Integration](#basic-integration)
+  - [Framework Examples](#framework-examples)
+- [INSTALL/REQUIREMENTS](#installrequirements)
+- [License](#license)
+
+## Features
+
+- **Configurable Test APIs**: Launch Flask-based test APIs with YAML configuration
+- **Dummy Data Generation**: Generate realistic test data for users, posts, permissions, and more
+- **Multiple Output Formats**: Export data as Parquet, CSV, JSON, or line-delimited JSON
+- **Background Server Management**: Start/stop multiple servers with process tracking
+- **Version Support**: Handle multiple API versions in subdirectories
+- **Port Auto-Selection**: Automatic port selection when configured port is unavailable
+- **Flexible Responses**: Built-in response types with dynamic data generation
+
 ## Quick Example
 
 ### Toy APIs
 
-Consider the Following config file
+Consider the following config file:
 
-```yaml toy_api_config/example.yaml
+```yaml
+# toy_api_config/example.yaml
 name: my-api
 description: Simple test API
 port: 1234
@@ -27,20 +54,18 @@ routes:
     response: "user_detail"
 ```
 
-Running 
+Running `toy_api start example` will launch a Flask API filled with dummy data at `http://127.0.0.1:1234`:
 
-```bash
-# launch a toy-api
-toy_api start example
-```
-
-will launch a flask api filled with dummy data. See [this]() for more information about "response-types" and how the data is generate. This can be configured to return different kinds of data and handle different methods.
+- `/` - API metadata
+- `/users` - List of users
+- `/users/123` - User details
 
 ### Toy Data
 
-Similarly, an entire database can be created with a simple file
+Similarly, an entire database can be created with a simple config file:
 
-```yaml toy_api_config/databases/example_db.yaml
+```yaml
+# toy_api_config/databases/example_db.yaml
 config:
   NB_USERS: 10
 
@@ -66,71 +91,139 @@ tables:
     area: CHOOSE[[1000-9000]]
 ```
 
-and running
+Running `toy_api database example_db` will generate Parquet files in the `tables/` directory with realistic dummy data.
 
-```bash
-# generate files
-toy_api database example_db
-```
-
-The syntax is described in detail [here](TODO).
-
---- 
+---
 
 # CLI
 
-## CLI Reference
+## Commands
 
-### Commands
+Toy API provides a modern Click-based CLI:
+
+- **toy_api** (default): List all available configurations
+- **toy_api init**: Initialize `toy_api_config/` directory with example configs
+- **toy_api start [config]**: Start API server (foreground or background with --all)
+- **toy_api stop [config]**: Stop running server(s)
+- **toy_api ps**: List running servers
+- **toy_api list**: List all available configurations
+- **toy_api database <config>**: Generate tables from database configuration
+
+## Examples
 
 ```bash
-# Configuration and Info
-toy_api                 # List all configs
-toy_api init            # Create toy_api_config/ directory
-toy_api list            # List all configs
-toy_api list --apis     # List only API configs
-toy_api list --tables   # List only table configs
+# Initialize local configuration directory
+toy_api init
 
-# Start/Stop Servers
-toy_api start [config]                      # Start API server (foreground)
-toy_api start --all                         # Start all servers in toy_api_config/
-toy_api start --all versioned_remote        # Start all servers in versioned_remote/
-toy_api start --all versioned_remote --out versioned_remote/0.1  # Print output for specific server
-toy_api stop <config>                       # Stop specific server
-toy_api stop --all                          # Stop all running servers
-toy_api stop --all versioned_remote         # Stop all versioned_remote servers
-toy_api ps                                  # List running servers
+# List available configurations
+toy_api list
 
-# Generate Data
-toy_api database <config>  # Generate tables from database config
+# Start API server (foreground)
+toy_api start example
+toy_api start example --port 5000
+toy_api start example --host 0.0.0.0 --debug
+
+# Start all servers in background
+toy_api start --all
+toy_api start --all versioned_remote
+toy_api start --all versioned_remote --out versioned_remote/0.1
+
+# Check running servers
+toy_api ps
+
+# Stop servers
+toy_api stop example
+toy_api stop --all
+toy_api stop --all versioned_remote
+
+# Generate database tables
+toy_api database example_db
+toy_api database example_db --type csv
+toy_api database example_db --tables users,permissions
+toy_api database example_db --dest output/ --force
 ```
 
-### Options
+---
 
-**Start command:**
-- `--host <host>` - Bind host (default: 127.0.0.1)
-- `--port <port>` - Override config port
-- `--debug` - Enable debug mode
-- `--all` - Start all servers in directory (runs in background, logs to .toy_api/)
-- `--out <config>` - With --all, print output for specific config (default: last)
+# CONFIGURATION AND SYNTAX
 
-**Stop command:**
-- `--all` - Stop all servers (or all matching a prefix)
+Assume our file structure is:
 
-**Database command:**
-- `--tables <list>` - Comma-separated list of tables (default: all)
-- `--dest <path>` - Output directory (default: tables/)
-- `--type <format>` - Format: parquet, csv, json, ld-json (default: parquet)
-- `--force` - Overwrite existing files
-- `--partition <col>` - Partition column (parquet only, repeatable)
+```bash
+toy_api_config
+├── example.yaml
+├── api_v1.yaml
+├── api_v2.yaml
+├── versioned_remote
+│   ├── 0.1.yaml
+│   ├── 0.2.yaml
+│   └── 1.2.yaml
+└── databases
+    ├── example_db.yaml
+    └── test_db.yaml
+```
 
---- 
+---
 
-# TOY-APIs
+## API Configuration
 
-## Response Types
+API configurations are stored in the `toy_api_config/` directory. Each config defines:
+- **name**: API identifier
+- **description**: API description
+- **port**: Port to bind to (or omit for auto-selection)
+- **routes**: List of endpoint definitions
 
-Available response generators:
+### Basic Example
+
+```yaml
+# toy_api_config/example.yaml
+name: my-api
+description: Simple test API
+port: 1234
+
+routes:
+  - path: "/"
+    methods: ["GET"]
+    response: "api_info"
+
+  - path: "/users"
+    methods: ["GET"]
+    response: "user_list"
+
+  - path: "/users/{{user_id}}"
+    methods: ["GET"]
+    response: "user_detail"
+```
+
+### Variable Placeholders
+
+Routes use double curly braces `{{}}` for variable placeholders:
+
+- `/users` - Matches exactly "/users"
+- `/users/{{user_id}}` - Matches "/users/123", "/users/abc", etc.
+- `/users/{{user_id}}/posts` - Matches "/users/123/posts"
+
+### Port Management
+
+```yaml
+port: 8000              # Fixed port
+# OR omit for auto-selection (8000-9000 range)
+```
+
+If a configured port is unavailable, Toy API automatically selects the next available port.
+
+### Multiple Methods
+
+```yaml
+- path: "/users/{{user_id}}"
+  methods: ["GET", "POST", "PUT"]
+  response: "user_detail"
+```
+
+### Response Types
+
+Available built-in response generators:
+
 - `api_info` - API metadata
 - `user_list` - List of users
 - `user_detail` - Single user details
@@ -140,52 +233,59 @@ Available response generators:
 - `post_detail` - Single post
 - `health_check` - Health status
 
-## Configuration
+### Configuration Discovery
 
-### Port Management
-
-```yaml
-port: 8000              # Fixed port
-# OR omit for auto-selection (8000-9000 range)
-```
-
-### Multiple Methods
-
-```yaml
-- path: "/users/<user_id>"
-  methods: ["GET", "POST", "PUT"]
-  response: "user_detail"
-```
-
-### Priority Order
+Toy API searches for configs in priority order:
 
 1. **Local configs** - `toy_api_config/*.yaml`
 2. **Package configs** - Built-in configurations
 
---- 
+---
 
-# DUMMY-DB
+## Database Configuration
 
+Database configurations are stored in `toy_api_config/databases/` directory. Each database defines:
+- **config**: Reusable configuration variables
+- **shared**: Shared data across tables
+- **tables**: Table definitions with column specifications
 
-## Syntax
+### Syntax
 
-### Data Types
+Database configs use special syntax for data generation:
+
+#### Double Square Brackets `[[]]`
+
+Reference config variables or shared data:
+
+```yaml
+config:
+  NB_USERS: 10
+
+shared:
+  user_id[[NB_USERS]]: UNIQUE[int]
+
+tables:
+  users[[NB_USERS]]:
+    user_id: [[user_id]]
+```
+
+#### Data Types
+
+Basic data types:
 
 - `str` - Random string
 - `int` - Random integer (0-1000)
 - `float` - Random float (0-1000)
 - `bool` - Random boolean
 
-### Verbs
-
-**UNIQUE** - Generate unique values
+#### UNIQUE - Generate Unique Values
 
 ```yaml
 id: UNIQUE[int]      # 1000, 1001, 1002, ...
 code: UNIQUE[str]    # unique_0000, unique_0001, ...
 ```
 
-**CHOOSE** - Select from list or range
+#### CHOOSE - Select from List or Range
 
 ```yaml
 city: CHOOSE[[NYC, LA, SF]]              # Random city
@@ -195,7 +295,7 @@ items: CHOOSE[[1-100]][[5]]             # 5 random numbers
 random: CHOOSE[[x, y, z]][[n]]          # 1-3 items
 ```
 
-### Constants
+#### Constants
 
 **Singular** (single value):
 - `FIRST_NAME`, `LAST_NAME`, `LOCATION`, `PERMISSION`
@@ -254,6 +354,160 @@ tables:
     user_id: [[user_id]]
 ```
 
-## License
+### Complete Example
+
+```yaml
+name: example_db
+description: Example database with user data
+authors:
+  - API Team
+
+config:
+  NB_USERS: 10
+
+shared:
+  user_id[[NB_USERS]]: UNIQUE[int]
+  region_name: CHOOSE[[Atlanta, San Francisco, New York]][[1]]
+
+tables:
+  users[[NB_USERS]]:
+    user_id: [[user_id]]
+    age: CHOOSE[[21-89]]
+    name: NAME
+    job: JOB
+    active: bool
+    region_name: [[region_name]]
+
+  permissions:
+    user_id: [[user_id]]
+    permission_name: PERMISSIONS[n]
+    granted_date: str
+
+  regions:
+    region_name: [[region_name]]
+    area: CHOOSE[[1000-9000]]
+    population: int
+```
+
+---
+
+# Using Toy API in Your Own Projects
+
+The core functionality is available as standalone modules that can be integrated into any Python project.
+
+## Basic Integration
+
+### Creating an API
+
+```python
+from toy_api.app import create_app
+
+# Create Flask app from config
+app = create_app("toy_api_config/example.yaml")
+
+# Run the app
+app.run(host="127.0.0.1", port=5000)
+```
+
+### Generating Tables
+
+```python
+from toy_api.table_generator import create_table
+
+# Generate tables from database config
+create_table(
+    table_config="toy_api_config/databases/example_db.yaml",
+    dest="output",
+    file_type="parquet"
+)
+```
+
+## Framework Examples
+
+### Django Integration
+
+```python
+# In your Django app
+from toy_api.app import _load_config, create_app
+
+# Load config for use in Django views
+config = _load_config("path/to/config.yaml")
+
+# Or mount Toy API as a sub-application
+toy_app = create_app("path/to/config.yaml")
+```
+
+### FastAPI Integration
+
+```python
+from fastapi import FastAPI
+from toy_api.app import create_app
+
+app = FastAPI()
+
+# Mount Toy API as sub-app
+toy_app = create_app("toy_api_config/example.yaml")
+app.mount("/toy", toy_app)
+```
+
+### Pytest Integration
+
+```python
+import pytest
+from toy_api.app import create_app
+
+@pytest.fixture
+def toy_api_client():
+    app = create_app("tests/fixtures/test_api.yaml")
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
+
+def test_users_endpoint(toy_api_client):
+    response = toy_api_client.get('/users')
+    assert response.status_code == 200
+    assert isinstance(response.json, list)
+```
+
+---
+
+# INSTALL/REQUIREMENTS
+
+Requirements are managed through a [Pixi](https://pixi.sh/latest) "project" (similar to a conda environment). After pixi is installed use `pixi run <cmd>` to ensure the correct project is being used. For example,
+
+```bash
+# launch jupyter
+pixi run jupyter lab .
+
+# run a script
+pixi run python scripts/example.py
+
+# run toy_api commands
+pixi run toy_api start example
+```
+
+The first time `pixi run` is executed the project will be installed (note this means the first run will be a bit slower). Any changes to the project will be updated on the subsequent `pixi run`. It is unnecessary, but you can run `pixi install` after changes - this will update your local environment, so that it does not need to be updated on the next `pixi run`.
+
+Note, the repo's `pyproject.toml`, and `pixi.lock` files ensure `pixi run` will just work. No need to recreate an environment. Additionally, the `pyproject.toml` file includes `toy_api = { path = ".", editable = true }`. This line is equivalent to `pip install -e .`, so there is no need to pip install this module.
+
+The project was initially created using a `package_names.txt` and the following steps. Note that this should **NOT** be re-run as it will create a new project (potentially changing package versions).
+
+```bash
+#
+# IMPORTANT: Do NOT run this unless you explicitly want to create a new pixi project
+#
+# 1. initialize pixi project (in this case the pyproject.toml file had already existed)
+pixi init . --format pyproject
+# 2. add specified python version
+pixi add python=3.11
+# 3. add packages (note this will use pixi magic to determine/fix package version ranges)
+pixi add $(cat package_names.txt)
+# 4. add pypi-packages, if any (note this will use pixi magic to determine/fix package version ranges)
+pixi add --pypi $(cat pypi_package_names.txt)
+```
+
+---
+
+# License
 
 CC-BY-4.0
