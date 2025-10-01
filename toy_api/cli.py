@@ -129,129 +129,72 @@ def list_configs(apis: bool, tables: bool) -> None:
         _list_api_configs()
 
     if tables:
-        _list_table_configs()
+        _list_database_configs()
 
 
 @cli.command()
-@click.argument("table_config", type=str)
-@click.option("--dest", "-d", type=str, help="Destination path (default: tables/<config_name>.parquet)")
-@click.option("--type", "-t", type=click.Choice(['parquet', 'csv', 'json', 'ld-json']),
-              default='parquet', help="Output file format")
-@click.option("--force", "-f", is_flag=True, help="Overwrite existing files")
-@click.option("--partition", multiple=True, help="Partition columns (parquet only)")
-def table(table_config: str, dest: Optional[str], type: str, force: bool, partition: tuple) -> None:
-    """Generate table from configuration file.
-
-    TABLE_CONFIG: Table config name or path (e.g., db1 or config/tables/db1.yaml)
-
-    Examples:
-      toy_api table db1
-      toy_api table my_table --dest output.parquet
-      toy_api table complex --type csv --force
-    """
-    from toy_api.table_generator import create_table
-
-    try:
-        # Find table config file
-        config_path = _find_table_config(table_config)
-
-        if not config_path:
-            click.echo(f"Error: Table config '{table_config}' not found", err=True)
-            click.echo("\nAvailable table configs:")
-            _list_table_configs()
-            sys.exit(1)
-
-        # Determine destination
-        if dest is None:
-            # Default: tables/<config_name>.<type>
-            config_name = Path(config_path).stem
-            dest = f"tables/{config_name}.{type}"
-
-        dest_path = Path(dest)
-
-        # Check if file exists
-        if dest_path.exists() and not force:
-            click.echo(f"Error: File '{dest}' already exists. Use --force/-f to overwrite.", err=True)
-            sys.exit(1)
-
-        # Convert partition tuple to list
-        partition_cols = list(partition) if partition else None
-
-        # Generate table(s)
-        click.echo(f"Generating table(s) from {config_path}...")
-        create_table(
-            table_config=config_path,
-            dest=dest,
-            file_type=type,
-            partition_cols=partition_cols
-        )
-
-        click.echo(f"✓ Table(s) written to {dest}")
-
-    except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(1)
-
-
-@cli.command()
+@click.argument("database_config", type=str)
+@click.option("--tables", type=str, help="Comma-separated list of tables to generate (default: all)")
 @click.option("--dest", "-d", type=str, help="Destination directory (default: tables/)")
 @click.option("--type", "-t", type=click.Choice(['parquet', 'csv', 'json', 'ld-json']),
               default='parquet', help="Output file format")
 @click.option("--force", "-f", is_flag=True, help="Overwrite existing files")
-def tables(dest: Optional[str], type: str, force: bool) -> None:
-    """Generate all tables from toy_api_config/tables/*.yaml.
+@click.option("--partition", multiple=True, help="Partition columns (parquet only)")
+def database(database_config: str, tables: Optional[str], dest: Optional[str],
+             type: str, force: bool, partition: tuple) -> None:
+    """Generate tables from database configuration file.
+
+    DATABASE_CONFIG: Database config name or path (e.g., test_db or config/databases/test_db.yaml)
 
     Examples:
-      toy_api tables
-      toy_api tables --dest output/ --type csv
-      toy_api tables --force
+      toy_api database test_db
+      toy_api database test_db --tables posts
+      toy_api database test_db --tables posts,users
+      toy_api database test_db --dest output/ --type csv --force
     """
     from toy_api.table_generator import create_table
 
-    # Find all table configs in toy_api_config/tables/
-    config_dir = Path("toy_api_config/tables")
+    try:
+        # Find database config file
+        config_path = _find_database_config(database_config)
 
-    if not config_dir.exists():
-        click.echo("Error: toy_api_config/tables/ directory not found", err=True)
-        click.echo("Run 'toy_api init' to create configuration directory")
+        if not config_path:
+            click.echo(f"Error: Database config '{database_config}' not found", err=True)
+            click.echo("\nAvailable database configs:")
+            _list_database_configs()
+            sys.exit(1)
+
+        # Determine destination
+        if dest is None:
+            dest = "tables"
+
+        dest_dir = Path(dest)
+        dest_dir.mkdir(parents=True, exist_ok=True)
+
+        # Convert partition tuple to list
+        partition_cols = list(partition) if partition else None
+
+        # Parse tables filter
+        tables_filter = None
+        if tables:
+            tables_filter = [t.strip() for t in tables.split(',')]
+
+        # Generate table(s)
+        click.echo(f"Generating tables from {config_path}...")
+        create_table(
+            table_config=config_path,
+            dest=str(dest_dir),
+            file_type=type,
+            partition_cols=partition_cols,
+            tables_filter=tables_filter,
+            force=force
+        )
+
+        click.echo(f"✓ Tables written to {dest_dir}/")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
         sys.exit(1)
-
-    config_files = list(config_dir.glob("*.yaml"))
-
-    if not config_files:
-        click.echo("No table configurations found in toy_api_config/tables/", err=True)
-        sys.exit(1)
-
-    # Determine destination directory
-    if dest is None:
-        dest = "tables"
-
-    dest_dir = Path(dest)
-    dest_dir.mkdir(parents=True, exist_ok=True)
-
-    click.echo(f"Generating {len(config_files)} table(s)...")
-
-    for config_file in config_files:
-        config_name = config_file.stem
-        output_path = dest_dir / f"{config_name}.{type}"
-
-        # Check if file exists
-        if output_path.exists() and not force:
-            click.echo(f"⊗ Skipped {config_name} (file exists, use --force to overwrite)")
-            continue
-
-        try:
-            create_table(
-                table_config=str(config_file),
-                dest=str(output_path),
-                file_type=type
-            )
-            click.echo(f"✓ Generated {config_name} → {output_path}")
-
-        except Exception as e:
-            click.echo(f"✗ Failed {config_name}: {e}", err=True)
-
-    click.echo(f"\n✓ Complete! Tables written to {dest}/")
 
 
 #
@@ -322,13 +265,13 @@ def _list_api_configs() -> None:
     click.echo("  toy_api init               # Create toy_api_config/")
 
 
-def _list_table_configs() -> None:
-    """List available table configuration files."""
-    click.echo("Table Configurations:")
+def _list_database_configs() -> None:
+    """List available database configuration files."""
+    click.echo("Database Configurations:")
     click.echo()
 
     # Check local configs
-    local_dir = Path("toy_api_config/tables")
+    local_dir = Path("toy_api_config/databases")
     local_configs = []
     if local_dir.exists():
         local_configs = list(local_dir.glob("*.yaml"))
@@ -336,18 +279,18 @@ def _list_table_configs() -> None:
     # Check package configs
     try:
         import importlib.resources as pkg_resources
-        package_dir = Path(pkg_resources.files("toy_api") / "config" / "tables")
+        package_dir = Path(pkg_resources.files("toy_api") / "config" / "databases")
         package_configs = list(package_dir.glob("*.yaml")) if package_dir.exists() else []
     except Exception:
         package_configs = []
 
     if local_configs:
-        click.echo("📁 Local configs (toy_api_config/tables/):")
+        click.echo("📁 Local configs (toy_api_config/databases/):")
         for config_file in sorted(local_configs):
             click.echo(f"  {config_file.stem}")
         click.echo()
     else:
-        click.echo("📁 Local configs (toy_api_config/tables/): None")
+        click.echo("📁 Local configs (toy_api_config/databases/): None")
         click.echo()
 
     if package_configs:
@@ -360,12 +303,12 @@ def _list_table_configs() -> None:
         click.echo()
 
     click.echo("Usage:")
-    click.echo("  toy_api table <config>     # Generate single table")
-    click.echo("  toy_api tables             # Generate all local tables")
+    click.echo("  toy_api database <config>              # Generate all tables")
+    click.echo("  toy_api database <config> --tables <t> # Generate specific tables")
 
 
-def _find_table_config(config_name: str) -> Optional[str]:
-    """Find table configuration file by name.
+def _find_database_config(config_name: str) -> Optional[str]:
+    """Find database configuration file by name.
 
     Args:
         config_name: Config name or path.
@@ -389,14 +332,14 @@ def _find_table_config(config_name: str) -> Optional[str]:
             return str(config_path)
 
     # Check local config directory
-    local_config = Path(f"toy_api_config/tables/{config_name}.yaml")
+    local_config = Path(f"toy_api_config/databases/{config_name}.yaml")
     if local_config.exists():
         return str(local_config)
 
     # Check package config directory
     try:
         import importlib.resources as pkg_resources
-        package_config = Path(pkg_resources.files("toy_api") / "config" / "tables" / f"{config_name}.yaml")
+        package_config = Path(pkg_resources.files("toy_api") / "config" / "databases" / f"{config_name}.yaml")
         if package_config.exists():
             return str(package_config)
     except Exception:
