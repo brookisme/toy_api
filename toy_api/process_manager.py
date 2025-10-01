@@ -53,8 +53,10 @@ def start_background_process(config_name: str, config_path: str, host: str, port
 
     # Start process in background
     try:
-        # Use nohup and redirect output
-        log_file = PIDFILE_DIR / f"{config_name}.log"
+        # Sanitize config name for filesystem (replace / with _)
+        safe_config_name = config_name.replace('/', '_')
+        log_file = PIDFILE_DIR / f"{safe_config_name}.log"
+
         cmd = [
             sys.executable, "-m", "toy_api.cli", "start", config_path,
             "--host", host, "--port", str(port)
