@@ -21,6 +21,7 @@ from toy_api.app import _load_config, create_app
 from toy_api.config_discovery import find_config_path, get_available_configs, init_config_with_example
 from toy_api.constants import DEFAULT_HOST
 from toy_api.port_utils import get_port_from_config_or_auto
+from toy_api.process_manager import get_all_configs_in_directory, list_processes, start_background_process, stop_all_processes, stop_process
 
 
 #
@@ -61,16 +62,25 @@ def init() -> None:
 @click.option("--host", default=DEFAULT_HOST, help=f"Host to bind to (default: {DEFAULT_HOST})")
 @click.option("-p", "--port", type=int, help="Port to bind to (overrides config file)")
 @click.option("--debug", is_flag=True, help="Enable debug mode")
-def start(config: str, host: str, port: Optional[int], debug: bool) -> None:
+@click.option("--all", "start_all", is_flag=True, help="Start all servers in config directory")
+@click.option("--out", type=str, help="With --all, print output for specific config (default: last)")
+def start(config: str, host: str, port: Optional[int], debug: bool, start_all: bool, out: Optional[str]) -> None:
     """Start toy API server with specified configuration.
 
-    CONFIG: Config name or path (default: v1)
+    CONFIG: Config name, path, or directory for --all (default: v1)
 
     Examples:
       toy_api start
       toy_api start v2
       toy_api start custom_config --port 5000
+      toy_api start --all
+      toy_api start --all versioned_remote
+      toy_api start --all versioned_remote --out versioned_remote/0.1
     """
+    if start_all:
+        _start_all_servers(config if config != "v1" else None, host, out)
+        return
+
     try:
         # Find config file using discovery system
         config_path, config_message = find_config_path(config)
@@ -198,9 +208,170 @@ def database(database_config: str, tables: Optional[str], dest: Optional[str],
         sys.exit(1)
 
 
+@cli.command()
+@click.argument("config", required=False, type=str)
+@click.option("--all", "stop_all", is_flag=True, help="Stop all running servers")
+def stop(config: Optional[str], stop_all: bool) -> None:
+    """Stop running toy API server(s).
+
+    CONFIG: Config name to stop (e.g., basic, versioned_remote/0.1)
+
+    Examples:
+      toy_api stop basic
+      toy_api stop versioned_remote/0.1
+      toy_api stop --all
+      toy_api stop --all versioned_remote
+    """
+    if stop_all:
+        if config:
+            # Stop all servers matching a prefix
+            _stop_servers_by_prefix(config)
+        else:
+            # Stop all servers
+            results = stop_all_processes()
+            if not results:
+                click.echo("No running servers found")
+                return
+
+            for config_name, success, message in results:
+                if success:
+                    click.echo(f"✓ {message}")
+                else:
+                    click.echo(f"✗ {message}", err=True)
+        return
+
+    if not config:
+        click.echo("Error: CONFIG required when not using --all", err=True)
+        click.echo("Usage: toy_api stop <config> or toy_api stop --all")
+        sys.exit(1)
+
+    success, message = stop_process(config)
+    if success:
+        click.echo(f"✓ {message}")
+    else:
+        click.echo(f"✗ {message}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+def ps() -> None:
+    """List running toy API servers."""
+    processes = list_processes()
+
+    if not processes:
+        click.echo("No running servers")
+        return
+
+    click.echo("Running servers:")
+    click.echo()
+    for config_name, info in sorted(processes.items()):
+        click.echo(f"  {config_name}")
+        click.echo(f"    URL: http://{info['host']}:{info['port']}")
+        click.echo(f"    PID: {info['pid']}")
+        click.echo(f"    Log: {info['log_file']}")
+        click.echo()
+
+
 #
 # INTERNAL HELPERS
 #
+def _start_all_servers(directory: Optional[str], host: str, out_config: Optional[str]) -> None:
+    """Start all servers in a directory (or subdirectory).
+
+    Args:
+        directory: Directory to search (None = all configs, or specific subdirectory).
+        host: Host to bind to.
+        out_config: Config to print output for (None = last server).
+    """
+    # Determine search directory
+    if directory:
+        # Check if it's a subdirectory
+        from pathlib import Path
+        subdir_path = Path(f"toy_api_config/{directory}")
+        if subdir_path.is_dir():
+            search_dir = str(subdir_path)
+        else:
+            search_dir = "toy_api_config"
+    else:
+        search_dir = "toy_api_config"
+
+    # Get all configs
+    configs = get_all_configs_in_directory(search_dir)
+
+    if not configs:
+        click.echo(f"No configs found in {search_dir}")
+        sys.exit(1)
+
+    # Filter by prefix if directory was specified
+    if directory and not Path(f"toy_api_config/{directory}").is_dir():
+        configs = [(name, path) for name, path in configs if name.startswith(directory)]
+        if not configs:
+            click.echo(f"No configs found matching '{directory}'")
+            sys.exit(1)
+
+    click.echo(f"Starting {len(configs)} server(s)...")
+    click.echo()
+
+    started = []
+    target_config = out_config if out_config else configs[-1][0]
+
+    for config_name, config_path in configs:
+        try:
+            # Load config for port
+            config_data = _load_config(config_path)
+            port, port_msg = get_port_from_config_or_auto(config_data, None, host)
+
+            if port == 0:
+                click.echo(f"✗ {config_name}: {port_msg}")
+                continue
+
+            # Start in background
+            success, message = start_background_process(config_name, config_path, host, port)
+
+            if success:
+                click.echo(f"✓ {message}")
+                started.append((config_name, host, port))
+            else:
+                click.echo(f"✗ {message}")
+
+        except Exception as e:
+            click.echo(f"✗ {config_name}: {e}")
+
+    click.echo()
+    click.echo(f"Started {len(started)} server(s)")
+
+    # Print output for target config
+    if target_config and any(name == target_config for name, _, _ in started):
+        target_info = next((h, p) for n, h, p in started if n == target_config)
+        click.echo()
+        click.echo(f"Output for {target_config}:")
+        click.echo(f"  http://{target_info[0]}:{target_info[1]}")
+
+
+def _stop_servers_by_prefix(prefix: str) -> None:
+    """Stop all servers matching a prefix.
+
+    Args:
+        prefix: Prefix to match (e.g., "versioned_remote").
+    """
+    processes = list_processes()
+    matching = [(name, info) for name, info in processes.items() if name.startswith(prefix)]
+
+    if not matching:
+        click.echo(f"No running servers found matching '{prefix}'")
+        return
+
+    click.echo(f"Stopping {len(matching)} server(s) matching '{prefix}'...")
+    click.echo()
+
+    for config_name, _ in matching:
+        success, message = stop_process(config_name)
+        if success:
+            click.echo(f"✓ {message}")
+        else:
+            click.echo(f"✗ {message}", err=True)
+
+
 def _list_api_configs() -> None:
     """List available API configuration files."""
     click.echo("API Configurations:")
