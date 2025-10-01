@@ -81,10 +81,10 @@ def _get_default_config() -> Dict[str, Any]:
         "description": "Default toy API with basic routes",
         "port": 8000,
         "routes": [
-            {"path": "/", "methods": ["GET"], "response": "api_info"},
-            {"path": "/users", "methods": ["GET"], "response": "user_list"},
-            {"path": "/users/<user_id>", "methods": ["GET"], "response": "user_detail"},
-            {"path": "/health", "methods": ["GET"], "response": "health_check"},
+            {"route": "/", "methods": ["GET"], "response": "api_info"},
+            {"route": "/users", "methods": ["GET"], "response": "user_list"},
+            {"route": "/users/<user_id>", "methods": ["GET"], "response": "user_detail"},
+            {"route": "/health", "methods": ["GET"], "response": "health_check"},
         ]
     }
 
@@ -106,10 +106,10 @@ def _register_routes(app: Flask, config: Dict[str, Any]) -> None:
             "routes": []
         }
 
-        # Add route information (paths and methods only, not implementation details)
+        # Add route information (routes and methods only, not implementation details)
         for route_config in config.get("routes", []):
             route_info = {
-                "path": route_config.get("path", "/"),
+                "route": route_config.get("route", "/"),
                 "methods": route_config.get("methods", ["GET"])
             }
             metadata["routes"].append(route_info)
@@ -118,16 +118,16 @@ def _register_routes(app: Flask, config: Dict[str, Any]) -> None:
 
     # Register configured routes
     for route_config in config.get("routes", []):
-        path = route_config["path"]
+        route = route_config["route"]
         methods = route_config.get("methods", ["GET"])
         response_type = route_config["response"]
 
         # Create handler function
-        handler = _create_route_handler(response_type, path)
+        handler = _create_route_handler(response_type, route)
 
         # Register route with unique endpoint name
-        endpoint_name = f"route_{path.replace('/', '_').replace('<', '').replace('>', '')}"
-        app.add_url_rule(path, endpoint=endpoint_name, view_func=handler, methods=methods)
+        endpoint_name = f"route_{route.replace('/', '_').replace('<', '').replace('>', '')}"
+        app.add_url_rule(route, endpoint=endpoint_name, view_func=handler, methods=methods)
 
 
 def _create_route_handler(response_type: str, path: str):
