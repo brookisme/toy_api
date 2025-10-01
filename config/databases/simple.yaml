@@ -1,0 +1,7 @@
+tables:
+  users[5]:
+    id: UNIQUE[int]
+    name: NAME
+    email: str
+    location: LOCATION
+    active: bool
