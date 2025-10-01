@@ -111,7 +111,7 @@ toy_api database <config>  # Generate tables from database config
 - `--host <host>` - Bind host (default: 127.0.0.1)
 - `--port <port>` - Override config port
 - `--debug` - Enable debug mode
-- `--all` - Start all servers in directory (runs in background)
+- `--all` - Start all servers in directory (runs in background, logs to .toy_api/)
 - `--out <config>` - With --all, print output for specific config (default: last)
 
 **Stop command:**
