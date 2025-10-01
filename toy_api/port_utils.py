@@ -18,8 +18,11 @@ from typing import Optional
 #
 # CONSTANTS
 #
-DEFAULT_PORT_RANGE_START: int = 8000
-DEFAULT_PORT_RANGE_END: int = 9000
+DEFAULT_PORT_RANGE_START: int = 5000
+DEFAULT_PORT_RANGE_END: int = 6000
+FALLBACK_PORT_RANGE_START: int = 9000
+FALLBACK_PORT_RANGE_END: int = 10000
+RESERVED_PORTS: list[int] = [8000, 8001, 8002, 8003, 8004, 8005]  # Reserved for API Box
 
 
 #
@@ -49,6 +52,8 @@ def find_available_port(start_port: int = DEFAULT_PORT_RANGE_START,
                        host: str = "127.0.0.1") -> Optional[int]:
     """Find an available port in the specified range.
 
+    Skips ports in RESERVED_PORTS list (reserved for API Box).
+
     Args:
         start_port: Starting port number to check.
         end_port: Ending port number to check.
@@ -58,6 +63,9 @@ def find_available_port(start_port: int = DEFAULT_PORT_RANGE_START,
         Available port number, or None if no ports available in range.
     """
     for port in range(start_port, end_port + 1):
+        # Skip reserved ports
+        if port in RESERVED_PORTS:
+            continue
         if is_port_available(port, host):
             return port
     return None
@@ -89,11 +97,19 @@ def get_port_from_config_or_auto(config: dict,
         else:
             return 0, f"Port {specified_port} is already in use. Please choose a different port or remove the --port flag."
 
-    # Priority 2: Use port from config if specified
+    # Priority 2: Use port from config if specified and available
     config_port = config.get("port")
     if config_port is not None:
+        # Check if config port is in reserved range (avoid API Box ports)
+        if config_port in RESERVED_PORTS:
+            auto_port = find_available_port(host=host)
+            if auto_port is not None:
+                return auto_port, f"Config port {config_port} is reserved for API Box. Auto-selected port {auto_port}."
+            else:
+                return 0, f"Config port {config_port} is reserved and no available ports found in range {DEFAULT_PORT_RANGE_START}-{DEFAULT_PORT_RANGE_END}."
+
         if is_port_available(config_port, host):
-            return config_port, ""
+            return config_port, f"Using config port {config_port}"
         else:
             # Config port is taken, auto-select
             auto_port = find_available_port(host=host)
@@ -106,5 +122,10 @@ def get_port_from_config_or_auto(config: dict,
     auto_port = find_available_port(host=host)
     if auto_port is not None:
         return auto_port, f"Auto-selected port {auto_port}."
-    else:
-        return 0, f"No available ports found in range {DEFAULT_PORT_RANGE_START}-{DEFAULT_PORT_RANGE_END}."
+
+    # Priority 4: Try fallback range if default range is full
+    auto_port = find_available_port(FALLBACK_PORT_RANGE_START, FALLBACK_PORT_RANGE_END, host=host)
+    if auto_port is not None:
+        return auto_port, f"Auto-selected port {auto_port} (fallback range)."
+
+    return 0, f"No available ports found in ranges {DEFAULT_PORT_RANGE_START}-{DEFAULT_PORT_RANGE_END} or {FALLBACK_PORT_RANGE_START}-{FALLBACK_PORT_RANGE_END}."
