@@ -84,14 +84,25 @@ The syntax is described in detail [here](TODO).
 ### Commands
 
 ```bash
+# Configuration and Info
 toy_api                 # List all configs
 toy_api init            # Create toy_api_config/ directory
-toy_api start [config]  # Start API server
 toy_api list            # List all configs
 toy_api list --apis     # List only API configs
 toy_api list --tables   # List only table configs
-toy_api table <config>  # Generate single table
-toy_api tables          # Generate all tables
+
+# Start/Stop Servers
+toy_api start [config]                      # Start API server (foreground)
+toy_api start --all                         # Start all servers in toy_api_config/
+toy_api start --all versioned_remote        # Start all servers in versioned_remote/
+toy_api start --all versioned_remote --out versioned_remote/0.1  # Print output for specific server
+toy_api stop <config>                       # Stop specific server
+toy_api stop --all                          # Stop all running servers
+toy_api stop --all versioned_remote         # Stop all versioned_remote servers
+toy_api ps                                  # List running servers
+
+# Generate Data
+toy_api database <config>  # Generate tables from database config
 ```
 
 ### Options
@@ -100,17 +111,18 @@ toy_api tables          # Generate all tables
 - `--host <host>` - Bind host (default: 127.0.0.1)
 - `--port <port>` - Override config port
 - `--debug` - Enable debug mode
+- `--all` - Start all servers in directory (runs in background)
+- `--out <config>` - With --all, print output for specific config (default: last)
 
-**Table command:**
-- `--dest <path>` - Output path (default: tables/<name>.parquet)
-- `--type <format>` - Format: parquet, csv, json, ld-json
+**Stop command:**
+- `--all` - Stop all servers (or all matching a prefix)
+
+**Database command:**
+- `--tables <list>` - Comma-separated list of tables (default: all)
+- `--dest <path>` - Output directory (default: tables/)
+- `--type <format>` - Format: parquet, csv, json, ld-json (default: parquet)
 - `--force` - Overwrite existing files
 - `--partition <col>` - Partition column (parquet only, repeatable)
-
-**Tables command:**
-- `--dest <dir>` - Output directory (default: tables/)
-- `--type <format>` - Format for all tables
-- `--force` - Overwrite existing files
 
 --- 
 
