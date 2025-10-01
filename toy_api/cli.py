@@ -34,7 +34,8 @@ def cli(ctx: click.Context) -> None:
     Run without a command to list available configurations.
     """
     if ctx.invoked_subcommand is None:
-        list_configs(apis=True, tables=True)
+        _list_api_configs()
+        _list_database_configs()
 
 
 #
