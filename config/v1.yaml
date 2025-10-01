@@ -4,31 +4,31 @@ port: 1234
 
 routes:
   # Different endpoint structure to test custom route mapping
-  - path: "/user-permissions/<user_id>"
+  - route: "/user-permissions/<user_id>"
     methods: ["GET"]
     response: "user_permissions"
 
-  - path: "/users/<user_id>"
+  - route: "/users/<user_id>"
     methods: ["GET"]
     response: "user_detail"
 
-  - path: "/profiles/<user_id>"
+  - route: "/profiles/<user_id>"
     methods: ["GET"]
     response: "user_profile"
 
   # Additional routes for testing
-  - path: "/users"
+  - route: "/users"
     methods: ["GET"]
     response: "user_list"
 
-  - path: "/users/<user_id>/settings"
+  - route: "/users/<user_id>/settings"
     methods: ["GET"]
     response: "user_settings"
 
-  - path: "/users/<user_id>/delete"
+  - route: "/users/<user_id>/delete"
     methods: ["DELETE"]
     response: "user_detail"
 
-  - path: "/health"
+  - route: "/health"
     methods: ["GET"]
     response: "health_check"

@@ -4,57 +4,57 @@ port: 8080
 
 routes:
   # Basic user routes (some will be restricted by api-box)
-  - path: "/users"
+  - route: "/users"
     methods: ["GET"]
     response: "user_list"
 
-  - path: "/users/<user_id>"
+  - route: "/users/<user_id>"
     methods: ["GET"]
     response: "user_detail"
 
-  - path: "/users/<user_id>/profile"
+  - route: "/users/<user_id>/profile"
     methods: ["GET"]
     response: "user_profile"
 
-  - path: "/users/<user_id>/permissions"
+  - route: "/users/<user_id>/permissions"
     methods: ["GET"]
     response: "user_permissions"
 
-  - path: "/users/<user_id>/settings"
+  - route: "/users/<user_id>/settings"
     methods: ["GET"]
     response: "user_settings"
 
-  - path: "/users/<user_id>/delete"
+  - route: "/users/<user_id>/delete"
     methods: ["DELETE"]
     response: "user_detail"
 
-  - path: "/users/<user_id>/private"
+  - route: "/users/<user_id>/private"
     methods: ["GET"]
     response: "user_private"
 
   # Admin routes (will be restricted)
-  - path: "/admin"
+  - route: "/admin"
     methods: ["GET"]
     response: "admin_dashboard"
 
-  - path: "/admin/<admin_id>"
+  - route: "/admin/<admin_id>"
     methods: ["GET"]
     response: "admin_detail"
 
-  - path: "/admin/dashboard"
+  - route: "/admin/dashboard"
     methods: ["GET"]
     response: "admin_dashboard"
 
-  - path: "/admin/<admin_id>/dangerous"
+  - route: "/admin/<admin_id>/dangerous"
     methods: ["GET", "POST"]
     response: "admin_dangerous"
 
   # System configuration routes (will be restricted)
-  - path: "/system/<system_id>/config"
+  - route: "/system/<system_id>/config"
     methods: ["GET"]
     response: "system_config"
 
   # Health check (should always work)
-  - path: "/health"
+  - route: "/health"
     methods: ["GET"]
     response: "health_check"
