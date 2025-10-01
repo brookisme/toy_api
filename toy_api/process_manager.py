@@ -29,12 +29,11 @@ PIDFILE_PATH = PIDFILE_DIR / "processes.json"
 #
 # PUBLIC
 #
-def start_background_process(config_name: str, config_path: str, host: str, port: int) -> Tuple[bool, str]:
+def start_background_process(config_name: str, host: str, port: int) -> Tuple[bool, str]:
     """Start a toy API server in the background.
 
     Args:
-        config_name: Name of the config.
-        config_path: Path to the config file.
+        config_name: Name of the config (e.g., "basic", "versioned_remote/0.1").
         host: Host to bind to.
         port: Port to bind to.
 
@@ -58,7 +57,7 @@ def start_background_process(config_name: str, config_path: str, host: str, port
         log_file = PIDFILE_DIR / f"{safe_config_name}.log"
 
         cmd = [
-            sys.executable, "-m", "toy_api.cli", "start", config_path,
+            sys.executable, "-m", "toy_api.cli", "start", config_name,
             "--host", host, "--port", str(port)
         ]
 
@@ -73,7 +72,6 @@ def start_background_process(config_name: str, config_path: str, host: str, port
         # Store process info
         processes[config_name] = {
             "pid": process.pid,
-            "config_path": config_path,
             "host": host,
             "port": port,
             "log_file": str(log_file)

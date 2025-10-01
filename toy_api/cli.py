@@ -326,7 +326,7 @@ def _start_all_servers(directory: Optional[str], host: str, out_config: Optional
                 continue
 
             # Start in background
-            success, message = start_background_process(config_name, config_path, host, port)
+            success, message = start_background_process(config_name, host, port)
 
             if success:
                 click.echo(f"✓ {message}")
