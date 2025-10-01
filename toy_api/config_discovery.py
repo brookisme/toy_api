@@ -37,8 +37,13 @@ def find_config_path(config_name: Optional[str] = None) -> tuple[str, str]:
     3. Check package configs directory: configs/config_name[.yaml]
     4. Error if not found
 
+    Supports versioned configs:
+    - config_name can be "name/version" (e.g., "versioned_remote/1.2")
+    - Looks for toy_api_config/name/version.yaml
+
     Args:
         config_name: Name of config file (with or without .yaml extension).
+                     Can include version like "name/version".
 
     Returns:
         Tuple of (config_path, status_message).
@@ -48,6 +53,26 @@ def find_config_path(config_name: Optional[str] = None) -> tuple[str, str]:
     # Use default if no config specified
     if config_name is None:
         config_name = DEFAULT_CONFIG_NAME
+
+    # Check if config_name contains version (e.g., "versioned_remote/1.2")
+    if '/' in config_name:
+        parts = config_name.split('/', 1)
+        base_name = parts[0]
+        version = parts[1]
+
+        # Check for versioned config in local directory
+        versioned_path = _check_versioned_config(base_name, version, LOCAL_CONFIG_DIR)
+        if versioned_path:
+            return versioned_path, f"Using local versioned config: {versioned_path}"
+
+        # Check for versioned config in package directory
+        package_dir = _get_package_config_dir()
+        if package_dir:
+            versioned_path = _check_versioned_config(base_name, version, str(package_dir))
+            if versioned_path:
+                return versioned_path, f"Using package versioned config: {versioned_path}"
+
+        return "", f"Versioned config '{config_name}' not found"
 
     # Normalize config name (ensure .yaml extension)
     config_name = _normalize_config_name(config_name)
@@ -69,26 +94,47 @@ def find_config_path(config_name: Optional[str] = None) -> tuple[str, str]:
 def get_available_configs() -> dict[str, list[str]]:
     """Get lists of available configuration files.
 
+    Includes both single-file configs and versioned configs (directories).
+
     Returns:
         Dictionary with 'local' and 'package' keys containing lists of config names.
+        Versioned configs are listed as "name/version".
     """
     configs = {"local": [], "package": []}
 
     # Check local configs
     local_dir = Path(LOCAL_CONFIG_DIR)
     if local_dir.exists() and local_dir.is_dir():
+        # Single-file configs
         for config_file in local_dir.glob("*.yaml"):
             configs["local"].append(config_file.stem)
         for config_file in local_dir.glob("*.yml"):
             configs["local"].append(config_file.stem)
 
+        # Versioned configs (subdirectories)
+        for subdir in local_dir.iterdir():
+            if subdir.is_dir():
+                for version_file in subdir.glob("*.yaml"):
+                    configs["local"].append(f"{subdir.name}/{version_file.stem}")
+                for version_file in subdir.glob("*.yml"):
+                    configs["local"].append(f"{subdir.name}/{version_file.stem}")
+
     # Check package configs
     package_dir = _get_package_config_dir()
     if package_dir and package_dir.exists():
+        # Single-file configs
         for config_file in package_dir.glob("*.yaml"):
             configs["package"].append(config_file.stem)
         for config_file in package_dir.glob("*.yml"):
             configs["package"].append(config_file.stem)
+
+        # Versioned configs (subdirectories)
+        for subdir in package_dir.iterdir():
+            if subdir.is_dir():
+                for version_file in subdir.glob("*.yaml"):
+                    configs["package"].append(f"{subdir.name}/{version_file.stem}")
+                for version_file in subdir.glob("*.yml"):
+                    configs["package"].append(f"{subdir.name}/{version_file.stem}")
 
     return configs
 
@@ -147,6 +193,36 @@ def init_config_with_example() -> bool:
 #
 # INTERNAL
 #
+def _check_versioned_config(base_name: str, version: str, base_dir: str) -> Optional[str]:
+    """Check if a versioned config exists.
+
+    Args:
+        base_name: Base name of the config (e.g., "versioned_remote").
+        version: Version string (e.g., "1.2").
+        base_dir: Base directory to search in.
+
+    Returns:
+        Full path if found, None otherwise.
+    """
+    # Normalize version to include .yaml extension
+    if not version.endswith(('.yaml', '.yml')):
+        version = f"{version}.yaml"
+
+    # Check for versioned config: base_dir/base_name/version.yaml
+    versioned_path = Path(base_dir) / base_name / version
+    if versioned_path.exists() and versioned_path.is_file():
+        return str(versioned_path)
+
+    # Also try .yml extension if .yaml was requested
+    if version.endswith('.yaml'):
+        yml_version = version.replace('.yaml', '.yml')
+        yml_path = Path(base_dir) / base_name / yml_version
+        if yml_path.exists() and yml_path.is_file():
+            return str(yml_path)
+
+    return None
+
+
 def _normalize_config_name(config_name: str) -> str:
     """Normalize config name to include .yaml extension.
 
