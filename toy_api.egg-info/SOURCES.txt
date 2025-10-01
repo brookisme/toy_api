@@ -5,6 +5,10 @@ config/v1.yaml
 config/v2.yaml
 config/v3.yaml
 config/v4.yaml
+tests/test_base_endpoint.py
+tests/test_configurable_apis.py
+tests/test_names_update.py
+tests/test_validate_base_endpoint.py
 toy_api/__init__.py
 toy_api/app.py
 toy_api/cli.py
@@ -12,6 +16,7 @@ toy_api/config_discovery.py
 toy_api/constants.py
 toy_api/port_utils.py
 toy_api/response_generator.py
+toy_api/table_generator.py
 toy_api.egg-info/PKG-INFO
 toy_api.egg-info/SOURCES.txt
 toy_api.egg-info/dependency_links.txt

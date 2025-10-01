@@ -4,258 +4,388 @@ Version: 0.0.1
 Description-Content-Type: text/markdown
 Requires-Dist: flask
 Requires-Dist: click
+Requires-Dist: pyyaml
+Requires-Dist: pyarrow
 
-# Toy API - Configurable Routes
+# Toy API
 
-A YAML-configurable Flask API for testing API Box route restrictions and allowed routes functionality.
-
-## Overview
-
-Toy API allows you to define API routes and responses through YAML configuration files. This makes it perfect for testing different route restriction scenarios in API Box without having to modify code.
-
-## Features
-
-- **YAML-Configurable Routes**: Define endpoints, HTTP methods, and response types in YAML
-- **Smart Port Management**: Automatic port selection with availability checking
-- **Dummy Data Generation**: Automatic generation of realistic test data
-- **Multiple Configurations**: Support for different API configurations
-- **Simple Responses**: JSON responses with configurable data types
+Configurable test API servers and dummy data generation for testing and development.
 
 ## Quick Start
 
-### 1. Install and Use (Global Installation)
-
 ```bash
-# Install toy_api in your Python environment
+# Install
 pip install toy_api
 
-# Run with default config (v1)
+# Start default API server
+toy_api start
+
+# List available configurations
 toy_api
 
-# Run with specific config
-toy_api v2
-
-# List available configs
-toy_api --list-configs
+# Generate dummy data table
+toy_api table db1
 ```
 
-### 2. Project-Local Configuration
+## Features
+
+- **Configurable APIs**: Define REST endpoints via YAML
+- **Dummy Data Generation**: Create realistic test data
+- **Multiple Formats**: Parquet, CSV, JSON, LD-JSON
+- **Smart Port Management**: Automatic port selection
+- **Local Overrides**: Project-level configuration
+
+## Basic Usage
+
+### API Server
 
 ```bash
-# Create local config directory in your project
-toy_api --init-configs
+# Start API with default config (port 1234)
+toy_api start
 
-# Copy and customize configs
-cp <toy_api_package>/config/*.yaml toy_api_config/
+# Start with specific config
+toy_api start v2
 
-# Your local configs will override package defaults
-toy_api my_custom_config
+# Start with custom port
+toy_api start v3 --port 5000
+
+# Initialize local config directory
+toy_api init
 ```
 
-### 3. Usage Examples
+### Table Generation
 
 ```bash
-# Use default config with auto-selected port
-toy_api
+# Generate single table (default: tables/db1.parquet)
+toy_api table db1
 
-# Use specific package config
-toy_api v2
+# Generate with custom destination
+toy_api table simple --dest my_data.parquet
 
-# Use local project config (if exists)
-toy_api my_custom_api
+# Generate as CSV
+toy_api table complex --type csv
 
-# Override port
-toy_api v3 --port 5000
+# Generate all local tables
+toy_api tables
 
-# Debug mode
-toy_api v4 --debug
+# Overwrite existing files
+toy_api table db1 --force
 ```
 
-### 3. Test the API
+## API Configuration
 
-```bash
-curl http://127.0.0.1:4321/
-curl http://127.0.0.1:4321/users
-curl http://127.0.0.1:4321/users/123/profile
-```
-
-## Port Management
-
-The toy API includes smart port management:
-
-### Port Selection Priority
-
-1. **Command Line Flag**: `--port/-p` takes highest priority
-2. **Config File**: Uses `port` value from YAML config if specified
-3. **Auto-Selection**: Automatically finds available port (8000-9000 range)
-
-### Port Availability Checking
-
-- **Port Taken**: If specified port is unavailable, shows helpful error message
-- **Auto-Fallback**: If config port is taken, auto-selects alternative with notification
-- **Range Scanning**: Searches 8000-9000 range for available ports
-
-### Examples
-
-```bash
-# Use config-specified port (4321) if available
-toy_api --config configs/toy_api_v2.yaml
-
-# Force specific port (error if taken)
-toy_api --config configs/toy_api_v2.yaml --port 5000
-
-# Auto-select port when no config specified
-toy_api
-
-# See helpful error if port is taken
-toy_api --port 80  # Likely shows "Port 80 is already in use..."
-```
-
-## Configuration Discovery
-
-Toy API uses a smart configuration discovery system:
-
-### Discovery Priority
-
-1. **Local Project Configs**: `./toy_api_config/config_name.yaml`
-2. **Package Configs**: Built-in config from the toy_api package
-3. **Error**: Config not found in either location
-
-### Usage Patterns
-
-```bash
-# Without config name - uses default (v1)
-toy_api                    # → toy_api_config/v1.yaml OR package v1.yaml
-
-# With config name - searches both locations
-toy_api my_config          # → toy_api_config/my_config.yaml OR package my_config.yaml
-
-# List what's available
-toy_api --list-configs     # Shows both local and package configs
-
-# Set up local config directory
-toy_api --init-configs     # Creates ./toy_api_config/
-```
-
-### Benefits
-
-- **Override Defaults**: Customize package config for your project
-- **No Path Hassles**: Just use config names, not full paths
-- **Clear Priority**: Local config always overrides package config
-- **Portable**: Works from any directory once installed
-
-## Configuration Files
-
-### Available Configurations
-
-1. **`v1.yaml`** - Custom endpoint structure for testing route mapping (port 1234)
-2. **`v2.yaml`** - Basic API with all route types for comprehensive testing (port 4321)
-3. **`v3.yaml`** - Security-focused API for testing restrictions (port 8080)
-4. **`v4.yaml`** - Limited endpoints for testing allowed routes whitelist (port 9090)
-
-### Configuration Format
+### Simple API (config/v1.yaml)
 
 ```yaml
-name: "my-toy-api"
-description: "Description of this API configuration"
-port: 8000  # Optional: if not specified, auto-selects available port
+name: my-api
+description: Simple test API
+port: 1234
 
 routes:
+  - path: "/"
+    methods: ["GET"]
+    response: "api_info"
+
   - path: "/users"
     methods: ["GET"]
     response: "user_list"
 
   - path: "/users/<user_id>"
-    methods: ["GET", "POST"]
+    methods: ["GET"]
     response: "user_detail"
-
-  - path: "/admin/<admin_id>/dangerous"
-    methods: ["GET", "POST"]
-    response: "admin_dangerous"
 ```
 
 ### Response Types
 
+Available response generators:
+- `api_info` - API metadata
 - `user_list` - List of users
-- `user_detail` - Individual user data
-- `user_profile` - User profile information
-- `user_permissions` - User permission data
-- `user_posts` - User's posts
-- `user_settings` - User settings
-- `user_private` - Private user data (sensitive)
+- `user_detail` - Single user details
+- `user_profile` - User profile
+- `user_permissions` - User permissions
 - `post_list` - List of posts
-- `post_detail` - Individual post data
-- `admin_dashboard` - Admin dashboard data
-- `admin_detail` - Admin user data
-- `admin_dangerous` - Dangerous admin operation (should be restricted!)
-- `system_config` - System configuration (sensitive)
+- `post_detail` - Single post
 - `health_check` - Health status
 
-## Testing with API Box
+## Table Configuration
 
-These configurations are designed to work with the route restrictions test in the test_project:
+### Simple Table (config/tables/simple.yaml)
 
-### 1. Start the Toy APIs
-
-```bash
-# Terminal 1: Custom mapping API (port 1234) - DEFAULT
-toy_api v1
-
-# Terminal 2: Basic API (port 4321)
-toy_api v2
-
-# Terminal 3: Restricted API (port 8080)
-toy_api v3
-
-# Terminal 4: Whitelist API (port 9090)
-toy_api v4
+```yaml
+tables:
+  users[5]:
+    id: UNIQUE[int]
+    name: NAME
+    email: str
+    location: LOCATION
+    active: bool
 ```
 
-### 2. Test Route Restrictions
+### Full Example (config/tables/db1.yaml)
 
-```bash
-cd ../test_project
-python test_route_restrictions.py
+```yaml
+config:
+  NB_USERS: 10
+
+shared:
+  user_id[[NB_USERS]]: UNIQUE[int]
+  region_name: CHOOSE[[Atlanta, San Francisco, New York]][[1]]
+
+tables:
+  users[[NB_USERS]]:
+    user_id: [[user_id]]
+    age: CHOOSE[[21-89]]
+    name: NAME
+    job: JOB
+    nice: bool
+    region_name: [[region_name]]
+
+  permissions:
+    user_id: [[user_id]]
+    permissions: PERMISSIONS[n]
+
+  regions:
+    region_name: [[region_name]]
+    area: CHOOSE[[1000-9000]]
 ```
 
-### 3. Manual Testing
+## Advanced Syntax
 
-```bash
-# These should work (allowed routes)
-curl http://localhost:8000/remote_4321/latest/users
-curl http://localhost:8000/remote_4321/latest/users/123/profile
+### Table Generation
 
-# These should be blocked (restricted routes)
-curl http://localhost:8000/remote_4321/latest/users/123/delete
-curl http://localhost:8000/restricted_remote/latest/admin/dashboard
+#### Data Types
+
+- `str` - Random string
+- `int` - Random integer (0-1000)
+- `float` - Random float (0-1000)
+- `bool` - Random boolean
+
+#### Verbs
+
+**UNIQUE** - Generate unique values
+
+```yaml
+id: UNIQUE[int]      # 1000, 1001, 1002, ...
+code: UNIQUE[str]    # unique_0000, unique_0001, ...
 ```
 
-## Route Mapping Examples
+**CHOOSE** - Select from list or range
 
-The different configurations demonstrate:
+```yaml
+city: CHOOSE[[NYC, LA, SF]]              # Random city
+age: CHOOSE[[21-89]]                     # Random age 21-89
+tags: CHOOSE[[a, b, c, d]][[2]]         # Exactly 2 tags
+items: CHOOSE[[1-100]][[5]]             # 5 random numbers
+random: CHOOSE[[x, y, z]][[n]]          # 1-3 items
+```
 
-- **Global restrictions** (`users/{{}}/delete` blocked everywhere)
-- **Remote-specific restrictions** (different per API)
-- **Allowed routes whitelist** (only specific routes allowed)
-- **Custom route mapping** (different API signatures)
+#### Constants
+
+**Singular** (single value):
+- `FIRST_NAME`, `LAST_NAME`, `LOCATION`, `PERMISSION`
+- `THEME`, `LANGUAGE`, `POST_TAG`, `JOB`
+
+**Plural** (list of values):
+- `FIRST_NAMES`, `LAST_NAMES`, `LOCATIONS`, `PERMISSIONS`
+- `THEMES`, `LANGUAGES`, `POST_TAGS`, `JOBS`
+
+**With count**:
+
+```yaml
+tags: POST_TAGS[3]          # Exactly 3 tags
+perms: PERMISSIONS[n]       # 1 to all permissions
+```
+
+**Special**:
+
+```yaml
+name: NAME                  # Full name (first + last)
+names: NAMES                # List of full names
+```
+
+#### Shared Data
+
+Share columns across tables:
+
+```yaml
+shared:
+  user_id[10]: UNIQUE[int]          # Create 10 unique IDs
+  regions: CHOOSE[[A, B, C]][[1]]   # Create region list
+
+tables:
+  users[10]:
+    user_id: [[user_id]]            # Reference shared IDs
+    region: [[regions]]             # Reference regions
+```
+
+#### Config Variables
+
+Define reusable values:
+
+```yaml
+config:
+  NB_USERS: 20
+  NB_POSTS: 100
+
+shared:
+  user_id[[NB_USERS]]: UNIQUE[int]
+
+tables:
+  users[[NB_USERS]]:
+    user_id: [[user_id]]
+
+  posts[[NB_POSTS]]:
+    user_id: [[user_id]]
+```
+
+### API Configuration
+
+#### Port Management
+
+```yaml
+port: 8000              # Fixed port
+# OR omit for auto-selection (8000-9000 range)
+```
+
+#### Multiple Methods
+
+```yaml
+- path: "/users/<user_id>"
+  methods: ["GET", "POST", "PUT"]
+  response: "user_detail"
+```
+
+#### Custom Responses
+
+Add custom response generators in `response_generator.py`.
+
+## CLI Reference
+
+### Commands
+
+```bash
+toy_api                 # List all configs
+toy_api init            # Create toy_api_config/ directory
+toy_api start [config]  # Start API server
+toy_api list            # List all configs
+toy_api list --apis     # List only API configs
+toy_api list --tables   # List only table configs
+toy_api table <config>  # Generate single table
+toy_api tables          # Generate all tables
+```
+
+### Options
+
+**Start command:**
+- `--host <host>` - Bind host (default: 127.0.0.1)
+- `--port <port>` - Override config port
+- `--debug` - Enable debug mode
+
+**Table command:**
+- `--dest <path>` - Output path (default: tables/<name>.parquet)
+- `--type <format>` - Format: parquet, csv, json, ld-json
+- `--force` - Overwrite existing files
+- `--partition <col>` - Partition column (parquet only, repeatable)
+
+**Tables command:**
+- `--dest <dir>` - Output directory (default: tables/)
+- `--type <format>` - Format for all tables
+- `--force` - Overwrite existing files
+
+## Configuration Discovery
+
+### Priority Order
+
+1. **Local configs** - `toy_api_config/*.yaml`
+2. **Package configs** - Built-in configurations
+
+### Directory Structure
+
+```
+project/
+├── toy_api_config/           # Local configs (create with toy_api init)
+│   ├── my_api.yaml           # Custom API config
+│   └── tables/               # Local table configs
+│       └── my_table.yaml
+└── tables/                   # Generated tables (default output)
+    ├── db1.parquet
+    └── simple.csv
+```
+
+## Examples
+
+### Complete Workflow
+
+```bash
+# 1. Initialize local config
+toy_api init
+
+# 2. Create custom table config
+cat > toy_api_config/tables/users.yaml << EOF
+tables:
+  users[10]:
+    id: UNIQUE[int]
+    name: NAME
+    email: str
+    age: CHOOSE[[21-65]]
+    active: bool
+EOF
+
+# 3. Generate table
+toy_api table users
+
+# 4. Start API server
+toy_api start v2 --port 5000
+
+# 5. Test API
+curl http://localhost:5000/users
+```
+
+### Integration Testing
+
+```bash
+# Generate test data
+toy_api table db1 --dest test_data.parquet
+
+# Start test API
+toy_api start v3 --port 8080
+
+# Run tests
+pytest tests/
+
+# Clean up
+rm test_data.parquet
+```
 
 ## Development
 
-### Adding New Response Types
+### Adding Response Types
 
-1. Add the response type to `_generate_response()` in `configurable_app.py`
-2. Create YAML configurations that use the new response type
-3. Test with the toy API and API Box
+Edit `toy_api/response_generator.py`:
 
-### Adding New Route Patterns
+```python
+def generate_response(response_type: str, kwargs: Dict, path: str) -> Dict:
+    if response_type == "my_custom_response":
+        return {
+            "custom": "data",
+            "path": path
+        }
+```
 
-Simply add them to your YAML configuration file:
+### Custom Constants
+
+Edit `toy_api/constants.py`:
+
+```python
+MY_CUSTOM_LIST = ["value1", "value2", "value3"]
+```
+
+Then use in table configs:
 
 ```yaml
-routes:
-  - path: "/my/custom/<param>/route"
-    methods: ["GET", "POST"]
-    response: "my_custom_response"
+tables:
+  items:
+    value: MY_CUSTOM_LIST
 ```
 
 ## License
