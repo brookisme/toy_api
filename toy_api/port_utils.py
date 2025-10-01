@@ -111,12 +111,12 @@ def get_port_from_config_or_auto(config: dict,
         if is_port_available(config_port, host):
             return config_port, f"Using config port {config_port}"
         else:
-            # Config port is taken, auto-select
-            auto_port = find_available_port(host=host)
+            # Config port is taken, auto-select starting from config_port + 1
+            auto_port = find_available_port(start_port=config_port + 1, host=host)
             if auto_port is not None:
                 return auto_port, f"Config port {config_port} is in use. Auto-selected port {auto_port}."
             else:
-                return 0, f"Config port {config_port} is in use and no available ports found in range {DEFAULT_PORT_RANGE_START}-{DEFAULT_PORT_RANGE_END}."
+                return 0, f"Config port {config_port} is in use and no available ports found in range {config_port + 1}-{DEFAULT_PORT_RANGE_END}."
 
     # Priority 3: Auto-select an available port
     auto_port = find_available_port(host=host)
