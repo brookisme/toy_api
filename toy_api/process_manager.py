@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 #
 # CONSTANTS
 #
-PIDFILE_DIR = Path.home() / ".toy_api"
+PIDFILE_DIR = Path(".toy_api")
 PIDFILE_PATH = PIDFILE_DIR / "processes.json"
 
 
