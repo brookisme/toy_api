@@ -71,7 +71,9 @@ def create_table(
         dest: Optional[str] = None,
         file_type: Literal['parquet', 'csv', 'json', 'ld-json'] = 'parquet',
         partition_cols: Optional[List[str]] = None,
-        to_dataframe: bool = False) -> Union[List[Dict[str, Any]], Any]:
+        to_dataframe: bool = False,
+        tables_filter: Optional[List[str]] = None,
+        force: bool = False) -> Union[List[Dict[str, Any]], Any]:
     """Create table data from configuration.
 
     Args:
@@ -80,6 +82,8 @@ def create_table(
         file_type: Output file format (parquet, csv, json, ld-json).
         partition_cols: Columns to partition by (parquet only).
         to_dataframe: Return DataFrame instead of list of dicts (if pandas available).
+        tables_filter: Optional list of table names to generate (default: all).
+        force: Overwrite existing files (default: False).
 
     Returns:
         List of dictionaries (one per row) or DataFrame if to_dataframe=True.
@@ -99,18 +103,30 @@ def create_table(
     shared_def = config.get("shared", {})
     tables_def = config.get("tables", {})
 
+    # Filter tables if requested
+    if tables_filter:
+        filtered_tables_def = {}
+        for table_name, columns in tables_def.items():
+            # Parse table name (remove row count spec)
+            parsed_name, _ = _parse_column_spec(table_name, config_values)
+            if parsed_name in tables_filter:
+                filtered_tables_def[table_name] = columns
+        tables_def = filtered_tables_def
+
     # Generate shared data
     shared_data = _generate_shared(shared_def, config_values)
 
     # Generate all tables
     all_tables = {}
-    for table_name, columns in tables_def.items():
-        table_data = _generate_table(table_name, columns, shared_data, config_values)
+    for table_spec, columns in tables_def.items():
+        # Parse table name to remove [[config]] syntax
+        table_name, _ = _parse_column_spec(table_spec, config_values)
+        table_data = _generate_table(table_spec, columns, shared_data, config_values)
         all_tables[table_name] = table_data
 
     # Write to file if dest provided
     if dest:
-        _write_tables(all_tables, dest, file_type, partition_cols)
+        _write_tables(all_tables, dest, file_type, partition_cols, force)
 
     # Return results
     if len(all_tables) == 1:
@@ -251,14 +267,14 @@ def _generate_column(
 
 
 def _generate_cell_value(
-        value_spec: str,
+        value_spec: Any,
         row_idx: int,
         config_values: Dict[str, Any],
         shared_data: Dict[str, List[Any]]) -> Any:
     """Generate a single cell value.
 
     Args:
-        value_spec: Value specification string.
+        value_spec: Value specification (string, list, dict, or other type).
         row_idx: Row index for shared data lookup.
         config_values: Config values for substitution.
         shared_data: Shared data columns.
@@ -266,8 +282,28 @@ def _generate_cell_value(
     Returns:
         Generated value.
     """
-    # Handle shared data reference [[column_name]]
-    if isinstance(value_spec, str) and value_spec.startswith("[[") and value_spec.endswith("]]"):
+    # Handle YAML parsing of [[name]] as nested list
+    # YAML interprets [[name]] as a list containing a list with one element
+    if isinstance(value_spec, list) and len(value_spec) == 1:
+        if isinstance(value_spec[0], list) and len(value_spec[0]) == 1:
+            # This is [[name]] from YAML, extract the shared column reference
+            shared_col_name = value_spec[0][0]
+            if shared_col_name in shared_data:
+                shared_col = shared_data[shared_col_name]
+                if row_idx < len(shared_col):
+                    return shared_col[row_idx]
+                else:
+                    # Row index exceeds shared data length, choose random
+                    return random.choice(shared_col)
+            else:
+                raise ValueError(f"Shared column '{shared_col_name}' not found in shared data")
+
+    # If value_spec is not a string, return it as-is
+    if not isinstance(value_spec, str):
+        return value_spec
+
+    # Handle shared data reference [[column_name]] (string format)
+    if value_spec.startswith("[[") and value_spec.endswith("]]"):
         shared_col_name = value_spec[2:-2]
         if shared_col_name in shared_data:
             shared_col = shared_data[shared_col_name]
@@ -293,7 +329,11 @@ def _generate_cell_value(
 
     # Handle CHOOSE verb
     if value_spec.startswith("CHOOSE["):
-        return _generate_choose_value(value_spec)
+        return _generate_choose_value(value_spec, shared_data)
+
+    # Handle DATE verb
+    if value_spec.startswith("DATE"):
+        return _generate_date_value(value_spec)
 
     # Handle constants
     if value_spec in CONSTANT_MAP:
@@ -358,17 +398,19 @@ def _generate_unique_value(value_spec: str, row_idx: int) -> Any:
         return f"{value_type}_{row_idx}"
 
 
-def _generate_choose_value(value_spec: str) -> Any:
+def _generate_choose_value(value_spec: str, shared_data: Dict[str, List[Any]]) -> Any:
     """Generate value using CHOOSE verb.
 
     Args:
-        value_spec: CHOOSE specification (e.g., "CHOOSE[[a,b,c]][[2]]").
+        value_spec: CHOOSE specification (e.g., "CHOOSE[[a,b,c]][[2]]" or "CHOOSE[[user_id]]").
+        shared_data: Shared data columns for column references.
 
     Returns:
         Chosen value(s).
     """
     # Parse CHOOSE[[items]][[count]] or CHOOSE[[items]]
     # Handle range syntax: CHOOSE[[21-89]]
+    # Handle shared column reference: CHOOSE[[column_name]]
     pattern = r'CHOOSE\[\[([^\]]+)\]\](?:\[\[([^\]]+)\]\])?'
     match = re.match(pattern, value_spec)
 
@@ -378,8 +420,11 @@ def _generate_choose_value(value_spec: str) -> Any:
     items_spec = match.group(1)
     count_spec = match.group(2)
 
+    # Check if items_spec is a shared column reference
+    if items_spec in shared_data:
+        items = shared_data[items_spec]
     # Parse items
-    if '-' in items_spec and items_spec.replace('-', '').replace(' ', '').isdigit():
+    elif '-' in items_spec and items_spec.replace('-', '').replace(' ', '').isdigit():
         # Range syntax: 21-89
         parts = items_spec.split('-')
         start = int(parts[0].strip())
@@ -405,6 +450,41 @@ def _generate_choose_value(value_spec: str) -> Any:
 
     count = min(count, len(items))
     return random.sample(items, count)
+
+
+def _generate_date_value(value_spec: str) -> str:
+    """Generate random date string with optional formatting.
+
+    Args:
+        value_spec: DATE specification using Python strftime format.
+                   Examples: "DATE" (default: %Y-%m-%d), "DATE[%Y%m%d:%H%M%S]"
+
+    Returns:
+        Formatted date string.
+    """
+    # Generate random datetime between 2020 and 2024
+    from datetime import datetime, timedelta
+    start_date = datetime(2020, 1, 1, 0, 0, 0)
+    end_date = datetime(2024, 12, 31, 23, 59, 59)
+    time_between = end_date - start_date
+    seconds_between = int(time_between.total_seconds())
+    random_seconds = random.randint(0, seconds_between)
+    random_datetime = start_date + timedelta(seconds=random_seconds)
+
+    # Extract format if provided
+    if value_spec == "DATE":
+        # Default format: YYYY-MM-DD
+        return random_datetime.strftime("%Y-%m-%d")
+
+    # Parse DATE[format]
+    match = re.match(r'DATE\[([^\]]+)\]', value_spec)
+    if match:
+        format_spec = match.group(1)
+        # Use format_spec directly as Python strftime format
+        return random_datetime.strftime(format_spec)
+
+    # Default fallback
+    return random_datetime.strftime("%Y-%m-%d")
 
 
 def _parse_column_spec(col_spec: str, config_values: Dict[str, Any]) -> tuple:
@@ -453,7 +533,8 @@ def _write_tables(
         tables: Dict[str, List[Dict[str, Any]]],
         dest: str,
         file_type: str,
-        partition_cols: Optional[List[str]] = None) -> None:
+        partition_cols: Optional[List[str]] = None,
+        force: bool = False) -> None:
     """Write tables to files.
 
     Args:
@@ -461,26 +542,28 @@ def _write_tables(
         dest: Destination path.
         file_type: File format.
         partition_cols: Partition columns (parquet only).
+        force: Overwrite existing files.
     """
     dest_path = Path(dest)
 
     if len(tables) == 1:
         # Single table - write to dest directly
         table_data = list(tables.values())[0]
-        _write_single_table(table_data, dest_path, file_type, partition_cols)
+        _write_single_table(table_data, dest_path, file_type, partition_cols, force)
     else:
         # Multiple tables - create directory and write each table
         dest_path.mkdir(parents=True, exist_ok=True)
         for table_name, table_data in tables.items():
             table_file = dest_path / f"{table_name}.{file_type}"
-            _write_single_table(table_data, table_file, file_type, partition_cols)
+            _write_single_table(table_data, table_file, file_type, partition_cols, force)
 
 
 def _write_single_table(
         data: List[Dict[str, Any]],
         file_path: Path,
         file_type: str,
-        partition_cols: Optional[List[str]] = None) -> None:
+        partition_cols: Optional[List[str]] = None,
+        force: bool = False) -> None:
     """Write single table to file.
 
     Args:
@@ -488,7 +571,12 @@ def _write_single_table(
         file_path: Output file path.
         file_type: File format.
         partition_cols: Partition columns (parquet only).
+        force: Overwrite existing files.
     """
+    # Check if file exists and force is False
+    if file_path.exists() and not force:
+        raise FileExistsError(f"File {file_path} already exists. Use force=True to overwrite.")
+
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     if file_type == 'parquet':
