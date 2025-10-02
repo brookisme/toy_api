@@ -1,60 +1,61 @@
 name: "toy-api-v3"
-description: "Toy API (v3): Security-focused"
+description: "Toy API (v3): Security-focused with object responses"
 port: 8080
 
 routes:
   # Basic user routes (some will be restricted by api-box)
+  # Using core objects for consistent responses
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"
+    response: "user_list"  # Legacy wrapper
 
   - route: "/users/<user_id>"
     methods: ["GET"]
-    response: "user_detail"
+    response: "core.user"
 
   - route: "/users/<user_id>/profile"
     methods: ["GET"]
-    response: "user_profile"
+    response: "core.user_profile"
 
   - route: "/users/<user_id>/permissions"
     methods: ["GET"]
-    response: "user_permissions"
+    response: "core.user_permissions"
 
   - route: "/users/<user_id>/settings"
     methods: ["GET"]
-    response: "user_settings"
+    response: "core.user_settings"
 
   - route: "/users/<user_id>/delete"
     methods: ["DELETE"]
-    response: "user_detail"
+    response: "core.user"
 
   - route: "/users/<user_id>/private"
     methods: ["GET"]
-    response: "user_private"
+    response: "core.user_private"
 
   # Admin routes (will be restricted)
   - route: "/admin"
     methods: ["GET"]
-    response: "admin_dashboard"
+    response: "admin_dashboard"  # Legacy wrapper
 
   - route: "/admin/<admin_id>"
     methods: ["GET"]
-    response: "admin_detail"
+    response: "core.admin"
 
   - route: "/admin/dashboard"
     methods: ["GET"]
-    response: "admin_dashboard"
+    response: "admin_dashboard"  # Legacy wrapper
 
   - route: "/admin/<admin_id>/dangerous"
     methods: ["GET", "POST"]
-    response: "admin_dangerous"
+    response: "admin_dangerous"  # Legacy warning
 
   # System configuration routes (will be restricted)
   - route: "/system/<system_id>/config"
     methods: ["GET"]
-    response: "system_config"
+    response: "core.system_config"
 
   # Health check (should always work)
   - route: "/health"
     methods: ["GET"]
-    response: "health_check"
+    response: "core.health_check"
