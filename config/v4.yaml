@@ -1,54 +1,55 @@
 name: "toy-api-v4"
-description: "Toy API (v4): Limited endpoints"
+description: "Toy API (v4): Limited endpoints with object responses"
 port: 9090
 
 routes:
   # Only the routes that match the whitelist in test_project
+  # Using core objects for consistency
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"
+    response: "user_list"  # Legacy wrapper
 
   - route: "/users/<user_id>"
     methods: ["GET"]
-    response: "user_detail"
+    response: "core.user"
 
   - route: "/users/<user_id>/profile"
     methods: ["GET"]
-    response: "user_profile"
+    response: "core.user_profile"
 
   - route: "/users/<user_id>/posts"
     methods: ["GET"]
-    response: "user_posts"
+    response: "user_posts"  # Legacy wrapper
 
   - route: "/posts"
     methods: ["GET"]
-    response: "post_list"
+    response: "post_list"  # Legacy wrapper
 
   - route: "/posts/<post_id>"
     methods: ["GET"]
-    response: "post_detail"
+    response: "core.post"
 
   - route: "/health"
     methods: ["GET"]
-    response: "health_check"
+    response: "core.health_check"
 
   # Additional routes that should be blocked by api-box whitelist
   - route: "/users/<user_id>/settings"
     methods: ["GET"]
-    response: "user_settings"
+    response: "core.user_settings"
 
   - route: "/users/<user_id>/permissions"
     methods: ["GET"]
-    response: "user_permissions"
+    response: "core.user_permissions"
 
   - route: "/admin"
     methods: ["GET"]
-    response: "admin_dashboard"
+    response: "admin_dashboard"  # Legacy wrapper
 
   - route: "/admin/<admin_id>"
     methods: ["GET"]
-    response: "admin_detail"
+    response: "core.admin"
 
   - route: "/system/<system_id>/config"
     methods: ["GET"]
-    response: "system_config"
+    response: "core.system_config"
