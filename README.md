@@ -9,8 +9,8 @@ Easily configurable test API servers and dummy Database generation for developme
   - [Commands](#commands)
   - [Examples](#examples)
 - [Configuration and Syntax](#configuration-and-syntax)
-  - [API Configuration](#api-configuration)
-  - [Database Configuration](#database-configuration)
+  - [API Configuration and Syntax](#api-configuration-and-syntax)
+  - [Database Configuration and Syntax](#database-configuration-and-syntax)
 - [Using Toy API in Your Own Projects](#using-toy-api-in-your-own-projects)
   - [Basic Integration](#basic-integration)
   - [Framework Examples](#framework-examples)
@@ -183,7 +183,7 @@ toy_api_config
 
 ---
 
-### API Configuration
+### API Configuration and Syntax
 
 API configurations are stored in the `toy_api_config/` directory. Each config defines:
 - **name**: API identifier
