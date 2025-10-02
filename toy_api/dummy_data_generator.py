@@ -404,6 +404,41 @@ def _generate_cell_value(
     if not isinstance(value_spec, str):
         return value_spec
 
+    # Handle [[...]][count] string format (e.g., [[object.core.user]][5])
+    match = re.match(r'\[\[([^\]]+)\]\]\[([^\]]+)\]', value_spec)
+    if match:
+        item_spec = match.group(1)
+        count_spec = match.group(2)
+
+        # Handle [[object.NAMESPACE.NAME]][count]
+        if item_spec.startswith('object.'):
+            object_name = item_spec[7:]  # Remove 'object.' prefix
+
+            # Determine count
+            if count_spec == 'n':
+                count = random.randint(1, 5)
+            else:
+                count = int(count_spec)
+
+            # Generate list of objects
+            return [
+                generate_object(object_name, row_idx=row_idx + i)
+                for i in range(count)
+            ]
+
+        # Handle [[start-end]][count] - list of random numbers from range
+        if '-' in item_spec and item_spec.replace('-', '').isdigit():
+            parts = item_spec.split('-')
+            start = int(parts[0])
+            end = int(parts[1])
+
+            if count_spec == 'n':
+                count = random.randint(1, 5)
+            else:
+                count = int(count_spec)
+
+            return [random.randint(start, end) for _ in range(count)]
+
     # Handle [[...]] string format
     if value_spec.startswith("[[") and value_spec.endswith("]]"):
         inner = value_spec[2:-2]
@@ -518,16 +553,17 @@ def _generate_choose_value(value_spec: str, shared_data: Dict[str, List[Any]]) -
     """Generate value using CHOOSE verb.
 
     Args:
-        value_spec: CHOOSE specification (e.g., "CHOOSE[[a,b,c]][[2]]" or "CHOOSE[[user_id]]").
+        value_spec: CHOOSE specification (e.g., "CHOOSE[[a,b,c]][2]" or "CHOOSE[[user_id]]").
         shared_data: Shared data columns for column references.
 
     Returns:
         Chosen value(s).
     """
-    # Parse CHOOSE[[items]][[count]] or CHOOSE[[items]]
+    # Parse CHOOSE[[items]][count] or CHOOSE[[items]]
     # Handle range syntax: CHOOSE[[21-89]]
     # Handle shared column reference: CHOOSE[[column_name]]
-    pattern = r'CHOOSE\[\[([^\]]+)\]\](?:\[\[([^\]]+)\]\])?'
+    # Single bracket for count parameter, double bracket for items
+    pattern = r'CHOOSE\[\[([^\]]+)\]\](?:\[([^\]]+)\])?'
     match = re.match(pattern, value_spec)
 
     if not match:
@@ -662,16 +698,11 @@ def _write_tables(
     """
     dest_path = Path(dest)
 
-    if len(tables) == 1:
-        # Single table - write to dest directly
-        table_data = list(tables.values())[0]
-        _write_single_table(table_data, dest_path, file_type, partition_cols, force)
-    else:
-        # Multiple tables - create directory and write each table
-        dest_path.mkdir(parents=True, exist_ok=True)
-        for table_name, table_data in tables.items():
-            table_file = dest_path / f"{table_name}.{file_type}"
-            _write_single_table(table_data, table_file, file_type, partition_cols, force)
+    # Always create directory structure (even for single table)
+    dest_path.mkdir(parents=True, exist_ok=True)
+    for table_name, table_data in tables.items():
+        table_file = dest_path / f"{table_name}.{file_type}"
+        _write_single_table(table_data, table_file, file_type, partition_cols, force)
 
 
 def _write_single_table(
@@ -778,7 +809,7 @@ def _load_objects(search_paths: Optional[List[str]] = None) -> Dict[str, Dict[st
 
     Args:
         search_paths: Optional list of paths to search for objects.
-                     Defaults to ['config/objects', 'toy_api_config/objects'].
+                     Defaults to local 'toy_api_config/objects' and package 'config/objects'.
 
     Returns:
         Dictionary mapping object names (file.key) to object definitions.
@@ -789,7 +820,18 @@ def _load_objects(search_paths: Optional[List[str]] = None) -> Dict[str, Dict[st
         return _OBJECTS_CACHE
 
     if search_paths is None:
-        search_paths = ['config/objects', 'toy_api_config/objects']
+        search_paths = []
+
+        # Add local project objects directory
+        local_objects = Path('toy_api_config') / 'objects'
+        if local_objects.exists():
+            search_paths.append(str(local_objects))
+
+        # Add package objects directory (relative to this file)
+        package_root = Path(__file__).parent.parent
+        package_objects = package_root / 'config' / 'objects'
+        if package_objects.exists():
+            search_paths.append(str(package_objects))
 
     objects = {}
 
@@ -813,9 +855,21 @@ def _load_objects(search_paths: Optional[List[str]] = None) -> Dict[str, Dict[st
 
             except Exception as e:
                 # Skip files that can't be loaded
+                import sys
+                print(f"Warning: Failed to load {yaml_file}: {e}", file=sys.stderr)
                 continue
 
     _OBJECTS_CACHE = objects
+
+    # Debug: print loaded objects on first load
+    import sys
+    print(f"DEBUG: Loaded {len(objects)} objects from paths: {search_paths}", file=sys.stderr)
+    if 'core.user_list' in objects:
+        print("DEBUG: ✓ core.user_list found", file=sys.stderr)
+    else:
+        print("DEBUG: ✗ core.user_list NOT found", file=sys.stderr)
+        print(f"DEBUG: Available core objects: {[k for k in objects.keys() if k.startswith('core.')][:10]}", file=sys.stderr)
+
     return objects
 
 
