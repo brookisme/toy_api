@@ -1,3 +1,6 @@
+# Complex database example using core objects
+# This demonstrates using built-in objects for consistency
+
 config:
   NB_USERS: 20
   NB_POSTS: 50
@@ -7,26 +10,18 @@ shared:
   post_id[[NB_POSTS]]: UNIQUE[int]
 
 tables:
+  # Using core.user object with shared user_id override
   users[[NB_USERS]]:
+    object: "core.user"
     user_id: [[user_id]]
-    name: NAME
-    age: CHOOSE[[18-65]]
-    email: str
-    location: LOCATION
-    theme: THEME
-    language: LANGUAGE
-    joined_date: str
-    active: bool
 
+  # Using core.post object with overrides
   posts[[NB_POSTS]]:
+    object: "core.post"
     post_id: [[post_id]]
-    user_id: [[user_id]]
-    title: POST_TITLE
-    tags: POST_TAGS[3]
-    content: str
-    published: bool
+    author: [[user_id]]  # Override to reference user
 
+  # Using core.user_permissions object
   user_permissions:
+    object: "core.user_permissions"
     user_id: [[user_id]]
-    permissions: PERMISSIONS[n]
-    granted_date: str
