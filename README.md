@@ -51,7 +51,7 @@ To generate dummy-data there are a number of built-in response-type generators:
 Given these generators, we can then define a toy-api in a config file:
 
 ```yaml
-# toy_api_config/example.yaml
+# toy_api_config/apis/example.yaml
 name: my-api
 description: Simple test API
 port: 1234
@@ -177,23 +177,26 @@ Assume our file structure is:
 
 ```bash
 toy_api_config
-├── example.yaml
-├── api_v1.yaml
-├── api_v2.yaml
-├── versioned_remote
-│   ├── 0.1.yaml
-│   ├── 0.2.yaml
-│   └── 1.2.yaml
-└── databases
-    ├── example_db.yaml
-    └── test_db.yaml
+├── apis
+│   ├── example.yaml
+│   ├── api_v1.yaml
+│   ├── api_v2.yaml
+│   └── versioned_remote
+│       ├── 0.1.yaml
+│       ├── 0.2.yaml
+│       └── 1.2.yaml
+├── databases
+│   ├── example_db.yaml
+│   └── test_db.yaml
+└── objects
+    └── custom.yaml
 ```
 
 ---
 
 ### API Configuration and Syntax
 
-API configurations are stored in the `toy_api_config/` directory. Each config defines:
+API configurations are stored in the `toy_api_config/apis/` directory. Each config defines:
 - **name**: API identifier
 - **description**: API description
 - **port**: Port to bind to (or omit for auto-selection)
@@ -202,7 +205,7 @@ API configurations are stored in the `toy_api_config/` directory. Each config de
 #### Basic Example
 
 ```yaml
-# toy_api_config/example.yaml
+# toy_api_config/apis/example.yaml
 name: my-api
 description: Simple test API
 port: 1234
@@ -264,8 +267,8 @@ If a configured port is unavailable, Toy API automatically selects the next avai
 
 Toy API searches for configs in priority order:
 
-1. **Local configs** - `toy_api_config/*.yaml`
-2. **Package configs** - Built-in configurations
+1. **Local configs** - `toy_api_config/apis/*.yaml`
+2. **Package configs** - Built-in configurations (in `config/apis/`)
 
 **For more details**, see the [API Configuration Wiki](https://github.com/yourusername/toy_api/wiki/API-Configuration).
 
@@ -491,7 +494,7 @@ The core functionality is available as standalone modules that can be integrated
 from toy_api.app import create_app
 
 # Create Flask app from config
-app = create_app("toy_api_config/example.yaml")
+app = create_app("toy_api_config/apis/example.yaml")
 
 # Run the app
 app.run(host="127.0.0.1", port=5000)
@@ -534,7 +537,7 @@ from toy_api.app import create_app
 app = FastAPI()
 
 # Mount Toy API as sub-app
-toy_app = create_app("toy_api_config/example.yaml")
+toy_app = create_app("toy_api_config/apis/example.yaml")
 app.mount("/toy", toy_app)
 ```
 
