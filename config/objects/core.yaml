@@ -89,3 +89,45 @@ system_config:
   config_debug_mode: bool
   warning: str
   last_updated: DATE[%Y-%m-%dT%H:%M:%SZ]
+
+# Dashboard stats
+stats:
+  total_users: [[300-500]]
+  active_sessions: [[0-20]]
+  server_load: [[30-90]]
+
+# Paginated user list
+user_list:
+  users: [[object.core.user]][[5]]
+  total: 5
+  page: 1
+  per_page: 10
+
+# Paginated post list
+post_list:
+  posts: [[object.core.post]][[10]]
+  total: 10
+  page: 1
+  per_page: 10
+
+# User posts composite
+user_posts:
+  user_id: UNIQUE[int]
+  posts: [[object.core.post]][[3]]
+  total: 3
+
+# Admin dashboard composite
+admin_dashboard:
+  stats: [[object.core.stats]]
+  recent_activity: ADMIN_ACTIVITIES[5]
+  alerts: [[0-5]]
+
+# Dangerous admin operation response
+admin_dangerous:
+  operation: str
+  warning: str
+  admin_id: UNIQUE[int]
+  action: str
+  status: str
+  timestamp: DATE[%Y-%m-%dT%H:%M:%SZ]
+  confirmation_required: bool

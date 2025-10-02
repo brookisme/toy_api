@@ -347,36 +347,89 @@ def _generate_cell_value(
     """
     # Handle YAML parsing of [[name]] as nested list
     # YAML interprets [[name]] as a list containing a list with one element
-    if isinstance(value_spec, list) and len(value_spec) == 1:
-        if isinstance(value_spec[0], list) and len(value_spec[0]) == 1:
-            # This is [[name]] from YAML, extract the shared column reference
-            shared_col_name = value_spec[0][0]
-            if shared_col_name in shared_data:
-                shared_col = shared_data[shared_col_name]
-                if row_idx < len(shared_col):
-                    return shared_col[row_idx]
+    if isinstance(value_spec, list):
+        # Handle [[item]][[count]] syntax (e.g., [[object.core.user]][[n]])
+        if len(value_spec) == 2:
+            if isinstance(value_spec[0], list) and len(value_spec[0]) == 1:
+                if isinstance(value_spec[1], list) and len(value_spec[1]) == 1:
+                    item_spec = value_spec[0][0]
+                    count_spec = value_spec[1][0]
+
+                    # Handle [[object.NAMESPACE.NAME]][[count]]
+                    if isinstance(item_spec, str) and item_spec.startswith('object.'):
+                        object_name = item_spec[7:]  # Remove 'object.' prefix
+
+                        # Determine count
+                        if count_spec == 'n':
+                            count = random.randint(1, 5)
+                        else:
+                            count = int(count_spec)
+
+                        # Generate list of objects
+                        return [
+                            generate_object(object_name, row_idx=row_idx + i)
+                            for i in range(count)
+                        ]
+
+        # Handle single [[item]] syntax
+        if len(value_spec) == 1:
+            if isinstance(value_spec[0], list) and len(value_spec[0]) == 1:
+                item = value_spec[0][0]
+
+                # Handle [[object.NAMESPACE.NAME]] - single object instance
+                if isinstance(item, str) and item.startswith('object.'):
+                    object_name = item[7:]  # Remove 'object.' prefix
+                    return generate_object(object_name, row_idx=row_idx)
+
+                # Handle [[300-500]] - range syntax
+                if isinstance(item, str) and '-' in item and item.replace('-', '').isdigit():
+                    parts = item.split('-')
+                    start = int(parts[0])
+                    end = int(parts[1])
+                    return random.randint(start, end)
+
+                # Handle [[shared_col_name]] - shared column reference
+                shared_col_name = item
+                if shared_col_name in shared_data:
+                    shared_col = shared_data[shared_col_name]
+                    if row_idx < len(shared_col):
+                        return shared_col[row_idx]
+                    else:
+                        # Row index exceeds shared data length, choose random
+                        return random.choice(shared_col)
                 else:
-                    # Row index exceeds shared data length, choose random
-                    return random.choice(shared_col)
-            else:
-                raise ValueError(f"Shared column '{shared_col_name}' not found in shared data")
+                    raise ValueError(f"Shared column '{shared_col_name}' not found in shared data")
 
     # If value_spec is not a string, return it as-is
     if not isinstance(value_spec, str):
         return value_spec
 
-    # Handle shared data reference [[column_name]] (string format)
+    # Handle [[...]] string format
     if value_spec.startswith("[[") and value_spec.endswith("]]"):
-        shared_col_name = value_spec[2:-2]
-        if shared_col_name in shared_data:
-            shared_col = shared_data[shared_col_name]
+        inner = value_spec[2:-2]
+
+        # Handle [[object.NAMESPACE.NAME]] - single object instance
+        if inner.startswith('object.'):
+            object_name = inner[7:]  # Remove 'object.' prefix
+            return generate_object(object_name, row_idx=row_idx)
+
+        # Handle [[300-500]] - range syntax
+        if '-' in inner and inner.replace('-', '').isdigit():
+            parts = inner.split('-')
+            start = int(parts[0])
+            end = int(parts[1])
+            return random.randint(start, end)
+
+        # Handle [[shared_col_name]] - shared data reference
+        if inner in shared_data:
+            shared_col = shared_data[inner]
             if row_idx < len(shared_col):
                 return shared_col[row_idx]
             else:
                 # Row index exceeds shared data length, choose random
                 return random.choice(shared_col)
         else:
-            raise ValueError(f"Shared column '{shared_col_name}' not found")
+            raise ValueError(f"Shared column '{inner}' not found")
 
     # Handle special NAME constant
     if value_spec == "NAME":
