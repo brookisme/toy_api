@@ -144,26 +144,40 @@ def list_configs(apis: bool, tables: bool) -> None:
 
 
 @cli.command()
-@click.argument("database_config", type=str)
+@click.argument("database_config", required=False, type=str)
 @click.option("--tables", type=str, help="Comma-separated list of tables to generate (default: all)")
 @click.option("--dest", "-d", type=str, help="Destination directory (default: databases/<config_path>/)")
 @click.option("--type", "-t", type=click.Choice(['parquet', 'csv', 'json', 'ld-json']),
               default='parquet', help="Output file format")
 @click.option("--force", "-f", is_flag=True, help="Overwrite existing files")
 @click.option("--partition", multiple=True, help="Partition columns (parquet only)")
-def database(database_config: str, tables: Optional[str], dest: Optional[str],
-             type: str, force: bool, partition: tuple) -> None:
+@click.option("--all", "generate_all", is_flag=True, help="Generate all database configs")
+def database(database_config: Optional[str], tables: Optional[str], dest: Optional[str],
+             type: str, force: bool, partition: tuple, generate_all: bool) -> None:
     """Generate tables from database configuration file.
 
-    DATABASE_CONFIG: Database config name or path (e.g., test_db or config/databases/test_db.yaml)
+    DATABASE_CONFIG: Database config name or path (e.g., test_db or versioned_db/1.2)
 
     Examples:
       toy_api database test_db
       toy_api database test_db --tables posts
       toy_api database test_db --tables posts,users
       toy_api database test_db --dest output/ --type csv --force
+      toy_api database --all
+      toy_api database --all versioned_db
     """
     from toy_api.table_generator import create_table
+
+    # Handle --all flag
+    if generate_all:
+        _generate_all_databases(database_config, type, force, list(partition) if partition else None)
+        return
+
+    # Require database_config if not using --all
+    if not database_config:
+        click.echo("Error: DATABASE_CONFIG required when not using --all", err=True)
+        click.echo("Usage: toy_api database <config> or toy_api database --all")
+        sys.exit(1)
 
     try:
         # Find database config file
@@ -536,6 +550,126 @@ def _find_database_config(config_name: str) -> Optional[str]:
         pass
 
     return None
+
+
+def _get_all_database_configs(directory: Optional[str] = None) -> List[Tuple[str, str]]:
+    """Get all database config files in a directory (including versioned subdirectories).
+
+    Args:
+        directory: Directory to search. If None, searches toy_api_config/databases/.
+
+    Returns:
+        List of (config_name, config_path) tuples.
+    """
+    if directory is None:
+        directory = "toy_api_config/databases"
+
+    base_path = Path(directory)
+    if not base_path.exists():
+        return []
+
+    configs = []
+
+    # Find all .yaml files recursively
+    for yaml_file in base_path.rglob("*.yaml"):
+        # Get relative path from base
+        rel_path = yaml_file.relative_to(base_path)
+
+        # Create config name from path (e.g., "versioned_db/1.2" or "test_db")
+        if len(rel_path.parts) > 1:
+            # Versioned: parent_dir/filename (without .yaml)
+            config_name = str(rel_path.parent / rel_path.stem)
+        else:
+            # Non-versioned: just filename (without .yaml)
+            config_name = rel_path.stem
+
+        configs.append((config_name, str(yaml_file)))
+
+    return sorted(configs)
+
+
+def _generate_all_databases(
+        directory: Optional[str],
+        file_type: str,
+        force: bool,
+        partition_cols: Optional[List[str]]) -> None:
+    """Generate all databases in a directory (or subdirectory).
+
+    Args:
+        directory: Directory to search (None = all databases, or specific subdirectory).
+        file_type: Output file format.
+        force: Overwrite existing files.
+        partition_cols: Partition columns.
+    """
+    from toy_api.table_generator import create_table
+
+    # Determine search directory
+    if directory:
+        # Check if it's a subdirectory
+        subdir_path = Path(f"toy_api_config/databases/{directory}")
+        if subdir_path.is_dir():
+            search_dir = str(subdir_path)
+        else:
+            search_dir = "toy_api_config/databases"
+    else:
+        search_dir = "toy_api_config/databases"
+
+    # Get all database configs
+    configs = _get_all_database_configs(search_dir)
+
+    if not configs:
+        click.echo(f"No database configs found in {search_dir}")
+        return
+
+    # Filter by directory prefix if specified
+    if directory:
+        configs = [(name, path) for name, path in configs if name.startswith(directory)]
+
+    if not configs:
+        click.echo(f"No database configs found matching '{directory}'")
+        return
+
+    click.echo(f"Generating {len(configs)} database(s)...")
+    click.echo()
+
+    success_count = 0
+    error_count = 0
+
+    for config_name, config_path in configs:
+        try:
+            # Derive output path from config path structure
+            config_path_obj = Path(config_path)
+            parts = config_path_obj.parts
+            if 'databases' in parts:
+                db_index = parts.index('databases')
+                db_path_parts = parts[db_index + 1:]
+                db_path_parts = list(db_path_parts)
+                db_path_parts[-1] = db_path_parts[-1].replace('.yaml', '')
+                dest = str(Path('databases') / Path(*db_path_parts))
+            else:
+                dest = str(Path('databases') / config_path_obj.stem)
+
+            click.echo(f"📊 Generating {config_name}...")
+
+            create_table(
+                table_config=config_path,
+                dest=dest,
+                file_type=file_type,
+                partition_cols=partition_cols,
+                force=force
+            )
+
+            click.echo(f"  ✓ Written to {dest}/")
+            success_count += 1
+
+        except Exception as e:
+            click.echo(f"  ✗ Error: {e}", err=True)
+            error_count += 1
+
+        click.echo()
+
+    # Summary
+    click.echo(f"Summary: {success_count} succeeded, {error_count} failed")
 
 
 #
