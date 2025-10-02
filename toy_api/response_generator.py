@@ -15,6 +15,7 @@ License: CC-BY-4.0
 import random
 from typing import Any, Dict
 
+from toy_api import dummy_data_generator
 from toy_api.constants import (
     FIRST_NAMES,
     LAST_NAMES,
@@ -35,14 +36,32 @@ from toy_api.constants import (
 def generate_response(response_type: str, params: Dict[str, str], path: str) -> Dict[str, Any]:
     """Generate dummy response data based on response type.
 
+    Supports both object-based responses (e.g., 'core.user') and legacy
+    hardcoded response types (e.g., 'user_detail').
+
     Args:
-        response_type: Type of response to generate.
+        response_type: Type of response to generate or object reference.
         params: URL parameters extracted from the route.
         path: Route path for additional context.
 
     Returns:
         Dictionary containing the generated response data.
     """
+    # Try object-based generation first (e.g., 'core.user', 'core.post')
+    if '.' in response_type:
+        try:
+            # Use hash of params for consistent generation
+            row_idx = hash(str(sorted(params.items()))) % 1000 if params else 0
+            return dummy_data_generator.generate_object(
+                response_type,
+                params=params,
+                row_idx=row_idx
+            )
+        except ValueError:
+            # Object not found, fall through to legacy responses
+            pass
+
+    # Legacy hardcoded response types
     if response_type == "api_info":
         return _generate_api_info()
 

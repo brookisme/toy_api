@@ -1,0 +1,91 @@
+# Core object definitions for Toy API
+# License: CC-BY-4.0
+
+# Basic user object
+user:
+  user_id: UNIQUE[int]
+  name: NAME
+  email: str
+  username: str
+  active: bool
+
+# Extended user profile
+user_profile:
+  user_id: UNIQUE[int]
+  name: NAME
+  email: str
+  bio: str
+  location: LOCATION
+  joined: DATE
+  followers: int
+  following: int
+
+# User permissions
+user_permissions:
+  user_id: UNIQUE[int]
+  permissions: PERMISSIONS[n]
+  role: CHOOSE[[user, moderator, admin]]
+  last_updated: DATE[%Y-%m-%dT%H:%M:%SZ]
+
+# User settings
+user_settings:
+  user_id: UNIQUE[int]
+  theme: THEME
+  notifications: bool
+  language: LANGUAGE
+  privacy_profile_public: bool
+  privacy_show_email: bool
+
+# User private data (sensitive)
+user_private:
+  user_id: UNIQUE[int]
+  ssn: str
+  bank_account: str
+  private_key: str
+  api_tokens: CHOOSE[[token1, token2, token3]][[n]]
+  warning: str
+
+# Basic post object
+post:
+  post_id: UNIQUE[int]
+  title: POST_TITLE
+  author: str
+  content: str
+  tags: POST_TAGS[3]
+  published: bool
+
+# Admin user
+admin:
+  admin_id: UNIQUE[int]
+  name: str
+  role: CHOOSE[[administrator, super_admin, moderator]]
+  permissions: PERMISSIONS[n]
+  last_login: DATE[%Y-%m-%dT%H:%M:%SZ]
+  login_count: int
+
+# Health check response
+health_check:
+  status: str
+  timestamp: DATE[%Y-%m-%dT%H:%M:%SZ]
+  version: str
+  uptime: str
+  dependencies_database: str
+  dependencies_cache: str
+  dependencies_storage: str
+
+# API info response
+api_info:
+  message: str
+  status: str
+  version: str
+
+# System configuration (sensitive)
+system_config:
+  system_id: str
+  environment: str
+  config_database_url: str
+  config_api_keys: str
+  config_secret_tokens: str
+  config_debug_mode: bool
+  warning: str
+  last_updated: DATE[%Y-%m-%dT%H:%M:%SZ]
