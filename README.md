@@ -109,7 +109,7 @@ tables:
     area: CHOOSE[[1000-9000]]
 ```
 
-Running `toy_api database example_db` will generate Parquet files in the `tables/` directory with realistic dummy data. See [Database Configuration and Syntax](#database-configuration-and-syntax) for more details.
+Running `toy_api database example_db` will generate Parquet files in the `databases/example_db/` directory with realistic dummy data. See [Database Configuration and Syntax](#database-configuration-and-syntax) for more details.
 
 ---
 
@@ -161,6 +161,10 @@ toy_api database example_db
 toy_api database example_db --type csv
 toy_api database example_db --tables users,permissions
 toy_api database example_db --dest output/ --force
+
+# Generate all databases
+toy_api database --all
+toy_api database --all versioned_db
 ```
 
 **For more details**, see the [CLI Reference Wiki](https://github.com/yourusername/toy_api/wiki/CLI-Reference).
