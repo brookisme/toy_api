@@ -4,7 +4,9 @@ Easily configurable test API servers and dummy Database generation for developme
 
 --- 
 
-- [Quick Example](#quick-example)
+- [Overview](#overview)
+  - [Toy Api](#toy-api)
+  - [Toy Database](#toy-database)
 - [CLI](#cli)
   - [Commands](#commands)
   - [Examples](#examples)
@@ -74,7 +76,9 @@ Running `toy-api start example` will launch a Flask API filled with dummy data a
 - `/users`: List of users
 - `/users/1001`: User details
 
-### Toy Data
+See [API Configuration and Syntax](#api-configuration-and-syntax) for more details.
+
+### Toy Database
 
 Similarly, an entire database can be created with a simple config file:
 
@@ -105,7 +109,7 @@ tables:
     area: CHOOSE[[1000-9000]]
 ```
 
-Running `toy_api database example_db` will generate Parquet files in the `tables/` directory with realistic dummy data. The see 
+Running `toy_api database example_db` will generate Parquet files in the `tables/` directory with realistic dummy data. See [Database Configuration and Syntax](#database-configuration-and-syntax) for more details.
 
 ---
 
