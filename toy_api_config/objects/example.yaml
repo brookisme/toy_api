@@ -1,0 +1,27 @@
+# Example custom object definitions
+# License: CC-BY-4.0
+
+# Custom user object with additional fields
+premium_user:
+  user_id: UNIQUE[int]
+  name: NAME
+  email: str
+  username: str
+  active: bool
+  subscription_tier: CHOOSE[[free, basic, premium, enterprise]]
+  credits: int
+  joined_date: DATE
+
+# Blog post with metadata
+blog_post:
+  post_id: UNIQUE[int]
+  title: POST_TITLE
+  author_name: NAME
+  content: str
+  excerpt: str
+  tags: POST_TAGS[n]
+  published: bool
+  views: int
+  likes: int
+  created_at: DATE[%Y-%m-%dT%H:%M:%SZ]
+  updated_at: DATE[%Y-%m-%dT%H:%M:%SZ]

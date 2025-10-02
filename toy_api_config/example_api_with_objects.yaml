@@ -1,0 +1,36 @@
+# Example API config using object-based responses
+# License: CC-BY-4.0
+
+name: example-api-objects
+description: Example API using object-based response syntax
+port: 3500
+
+routes:
+  - route: "/"
+    methods: ["GET"]
+    response: "api_info"  # Legacy response type still works
+
+  # New object-based responses
+  - route: "/users"
+    methods: ["GET"]
+    response: "user_list"  # Could be changed to core.user with wrapper
+
+  - route: "/users/{{user_id}}"
+    methods: ["GET"]
+    response: "core.user"  # NEW: Use object directly!
+
+  - route: "/users/{{user_id}}/profile"
+    methods: ["GET"]
+    response: "core.user_profile"  # NEW: Use object directly!
+
+  - route: "/posts/{{post_id}}"
+    methods: ["GET"]
+    response: "core.post"  # NEW: Use object directly!
+
+  - route: "/posts/{{post_id}}/full"
+    methods: ["GET"]
+    response: "example.blog_post"  # NEW: Use custom object!
+
+  - route: "/health"
+    methods: ["GET"]
+    response: "core.health_check"  # NEW: Use object directly!

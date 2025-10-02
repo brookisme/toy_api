@@ -1,0 +1,38 @@
+# Example database using object references
+# License: CC-BY-4.0
+
+name: example_with_objects
+description: Example showing new object-based syntax
+
+config:
+  NB_USERS: 10
+  NB_POSTS: 30
+
+shared:
+  user_id[[NB_USERS]]: UNIQUE[int]
+  post_id[[NB_POSTS]]: UNIQUE[int]
+
+tables:
+  # Using built-in core.user object with override
+  users[[NB_USERS]]:
+    object: "core.user"
+    user_id: [[user_id]]  # Override to use shared user_id
+
+  # Using custom example.premium_user object
+  premium_users:
+    object: "example.premium_user"
+    user_id: CHOOSE[[user_id]]  # Reference shared user_id
+    subscription_tier: CHOOSE[[premium, enterprise]]  # Override to premium only
+
+  # Using core.post object with extensions
+  posts[[NB_POSTS]]:
+    object: "core.post"
+    post_id: [[post_id]]
+    author_id: CHOOSE[[user_id]]  # Add author reference
+    created_date: DATE
+
+  # Old syntax still works!
+  user_permissions:
+    user_id: [[user_id]]
+    permission_name: PERMISSION
+    granted_date: DATE
