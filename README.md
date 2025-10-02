@@ -1,24 +1,25 @@
 # Toy API
 
-Easily configurable test API servers and dummy data generation for testing and development.
+Easily configurable test API servers and dummy Database generation for development and testing.
 
-## Table of Contents
+--- 
 
-- [Features](#features)
 - [Quick Example](#quick-example)
 - [CLI](#cli)
   - [Commands](#commands)
   - [Examples](#examples)
-- [CONFIGURATION AND SYNTAX](#configuration-and-syntax)
+- [Configuration and Syntax](#configuration-and-syntax)
   - [API Configuration](#api-configuration)
   - [Database Configuration](#database-configuration)
 - [Using Toy API in Your Own Projects](#using-toy-api-in-your-own-projects)
   - [Basic Integration](#basic-integration)
   - [Framework Examples](#framework-examples)
-- [INSTALL/REQUIREMENTS](#installrequirements)
+- [Install/Requirements](#installrequirements)
 - [License](#license)
 
-## Features
+---
+
+**FEATURES**
 
 - **Configurable Test APIs**: Launch Flask-based test APIs with YAML configuration
 - **Dummy Data Generation**: Generate realistic test data for users, posts, permissions, and more
@@ -28,11 +29,24 @@ Easily configurable test API servers and dummy data generation for testing and d
 - **Port Auto-Selection**: Automatic port selection when configured port is unavailable
 - **Flexible Responses**: Built-in response types with dynamic data generation
 
-## Quick Example
+---
+
+## Overview
 
 ### Toy APIs
 
-Consider the following config file:
+To generate dummy-data there are a number of built-in response-type generators:
+
+- `api_info`: API metadata
+- `user_list`: List of users
+- `user_detail`: Single user details
+- `user_profile`: User profile
+- `user_permissions`: User permissions
+- `post_list`: List of posts
+- `post_detail`: Single post
+- `health_check`: Health status
+
+Given these generators, we can then define a toy-api in a config file:
 
 ```yaml
 # toy_api_config/example.yaml
@@ -56,9 +70,9 @@ routes:
 
 Running `toy-api start example` will launch a Flask API filled with dummy data at `http://127.0.0.1:1234`:
 
-- `/` - API metadata
-- `/users` - List of users
-- `/users/123` - User details
+- `/`: API metadata
+- `/users`: List of users
+- `/users/1001`: User details
 
 ### Toy Data
 
@@ -91,13 +105,15 @@ tables:
     area: CHOOSE[[1000-9000]]
 ```
 
-Running `toy_api database example_db` will generate Parquet files in the `tables/` directory with realistic dummy data.
+Running `toy_api database example_db` will generate Parquet files in the `tables/` directory with realistic dummy data. The see 
 
 ---
 
-# CLI
+## Usage
 
-## Commands
+### CLI
+
+#### Commands
 
 Toy API provides a modern Click-based CLI:
 
@@ -109,7 +125,7 @@ Toy API provides a modern Click-based CLI:
 - **toy_api list**: List all available configurations
 - **toy_api database <config>**: Generate tables from database configuration
 
-## Examples
+#### Examples
 
 ```bash
 # Initialize local configuration directory
@@ -147,7 +163,7 @@ toy_api database example_db --dest output/ --force
 
 ---
 
-# CONFIGURATION AND SYNTAX
+## Configuration and Syntax
 
 Assume our file structure is:
 
@@ -167,7 +183,7 @@ toy_api_config
 
 ---
 
-## API Configuration
+### API Configuration
 
 API configurations are stored in the `toy_api_config/` directory. Each config defines:
 - **name**: API identifier
@@ -175,7 +191,7 @@ API configurations are stored in the `toy_api_config/` directory. Each config de
 - **port**: Port to bind to (or omit for auto-selection)
 - **routes**: List of endpoint definitions
 
-### Basic Example
+#### Basic Example
 
 ```yaml
 # toy_api_config/example.yaml
@@ -197,15 +213,29 @@ routes:
     response: "user_detail"
 ```
 
-### Variable Placeholders
+#### Variable Placeholders
 
 Routes use double curly braces `{{}}` for variable placeholders:
 
-- `/users` - Matches exactly "/users"
-- `/users/{{user_id}}` - Matches "/users/123", "/users/abc", etc.
-- `/users/{{user_id}}/posts` - Matches "/users/123/posts"
+- `/users`: Matches exactly "/users"
+- `/users/{{user_id}}`: Matches "/users/123", "/users/abc", etc.
+- `/users/{{user_id}}/posts`: Matches "/users/123/posts"
 
-### Port Management
+#### Response Types
+
+Available built-in response generators:
+
+- `api_info`: API metadata
+- `user_list`: List of users
+- `user_detail`: Single user details
+- `user_profile`: User profile
+- `user_permissions`: User permissions
+- `post_list`: List of posts
+- `post_detail`: Single post
+- `health_check`: Health status
+
+
+#### Port Management
 
 ```yaml
 port: 8000              # Fixed port
@@ -214,7 +244,7 @@ port: 8000              # Fixed port
 
 If a configured port is unavailable, Toy API automatically selects the next available port.
 
-### Multiple Methods
+#### Multiple Methods
 
 ```yaml
 - route: "/users/{{user_id}}"
@@ -222,20 +252,7 @@ If a configured port is unavailable, Toy API automatically selects the next avai
   response: "user_detail"
 ```
 
-### Response Types
-
-Available built-in response generators:
-
-- `api_info` - API metadata
-- `user_list` - List of users
-- `user_detail` - Single user details
-- `user_profile` - User profile
-- `user_permissions` - User permissions
-- `post_list` - List of posts
-- `post_detail` - Single post
-- `health_check` - Health status
-
-### Configuration Discovery
+#### Configuration Discovery
 
 Toy API searches for configs in priority order:
 
@@ -246,14 +263,12 @@ Toy API searches for configs in priority order:
 
 ---
 
-## Database Configuration
+### Database Configuration and Syntax
 
 Database configurations are stored in `toy_api_config/databases/` directory. Each database defines:
 - **config**: Reusable configuration variables
 - **shared**: Shared data across tables
 - **tables**: Table definitions with column specifications
-
-### Syntax
 
 Database configs use special syntax for data generation:
 
@@ -277,10 +292,10 @@ tables:
 
 Basic data types:
 
-- `str` - Random string
-- `int` - Random integer (0-1000)
-- `float` - Random float (0-1000)
-- `bool` - Random boolean
+- `str`: Random string
+- `int`: Random integer (0-1000)
+- `float`: Random float (0-1000)
+- `bool`: Random boolean
 
 #### UNIQUE - Generate Unique Values
 
@@ -323,7 +338,7 @@ name: NAME                  # Full name (first + last)
 names: NAMES                # List of full names
 ```
 
-### Shared Data
+#### Shared Data
 
 Share columns across tables:
 
@@ -338,7 +353,7 @@ tables:
     region: [[regions]]             # Reference regions
 ```
 
-### Config Variables
+#### Config Variables
 
 Define reusable values:
 
@@ -358,7 +373,7 @@ tables:
     user_id: [[user_id]]
 ```
 
-### Complete Example
+#### Complete Example
 
 ```yaml
 name: example_db
@@ -397,13 +412,13 @@ tables:
 
 ---
 
-# Using Toy API in Your Own Projects
+## Using Toy API in Your Own Projects
 
 The core functionality is available as standalone modules that can be integrated into any Python project.
 
-## Basic Integration
+### Basic Integration
 
-### Creating an API
+#### Creating an API
 
 ```python
 from toy_api.app import create_app
@@ -415,7 +430,7 @@ app = create_app("toy_api_config/example.yaml")
 app.run(host="127.0.0.1", port=5000)
 ```
 
-### Generating Tables
+#### Generating Tables
 
 ```python
 from toy_api.table_generator import create_table
@@ -428,9 +443,9 @@ create_table(
 )
 ```
 
-## Framework Examples
+### Framework Examples
 
-### Django Integration
+#### Django Integration
 
 ```python
 # In your Django app
@@ -443,7 +458,7 @@ config = _load_config("path/to/config.yaml")
 toy_app = create_app("path/to/config.yaml")
 ```
 
-### FastAPI Integration
+#### FastAPI Integration
 
 ```python
 from fastapi import FastAPI
@@ -456,7 +471,7 @@ toy_app = create_app("toy_api_config/example.yaml")
 app.mount("/toy", toy_app)
 ```
 
-### Pytest Integration
+#### Pytest Integration
 
 ```python
 import pytest
@@ -477,7 +492,7 @@ def test_users_endpoint(toy_api_client):
 
 ---
 
-# INSTALL/REQUIREMENTS
+## Install/Requirements
 
 Requirements are managed through a [Pixi](https://pixi.sh/latest) "project" (similar to a conda environment). After pixi is installed use `pixi run <cmd>` to ensure the correct project is being used. For example,
 
@@ -514,6 +529,6 @@ pixi add --pypi $(cat pypi_package_names.txt)
 
 ---
 
-# License
+## License
 
 CC-BY-4.0
