@@ -6,7 +6,7 @@ config:
 
 shared:
   user_id[[NB_USERS]]: UNIQUE[int]
-  region_name: CHOOSE[[Atlanta, San Francisco, New York]][[1]]
+  region_name: CHOOSE[[Atlanta, San Francisco, New York]][1]
 
 tables:
   # Using core.user with overrides AND extensions
