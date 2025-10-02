@@ -1,34 +1,35 @@
 name: "toy-api-v1"
-description: "Toy API (v1): Different endpoint structure"
+description: "Toy API (v1): Different endpoint structure using object-based responses"
 port: 1234
 
 routes:
   # Different endpoint structure to test custom route mapping
+  # Using core objects for responses
   - route: "/user-permissions/<user_id>"
     methods: ["GET"]
-    response: "user_permissions"
+    response: "core.user_permissions"
 
   - route: "/users/<user_id>"
     methods: ["GET"]
-    response: "user_detail"
+    response: "core.user"
 
   - route: "/profiles/<user_id>"
     methods: ["GET"]
-    response: "user_profile"
+    response: "core.user_profile"
 
   # Additional routes for testing
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"
+    response: "user_list"  # Legacy response type (list wrapper)
 
   - route: "/users/<user_id>/settings"
     methods: ["GET"]
-    response: "user_settings"
+    response: "core.user_settings"
 
   - route: "/users/<user_id>/delete"
     methods: ["DELETE"]
-    response: "user_detail"
+    response: "core.user"
 
   - route: "/health"
     methods: ["GET"]
-    response: "health_check"
+    response: "core.health_check"
