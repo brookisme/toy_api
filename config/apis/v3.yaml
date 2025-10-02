@@ -7,51 +7,51 @@ routes:
   # Using core objects for consistent responses
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"  # Legacy wrapper
+    response: "core.user_list"
 
-  - route: "/users/<user_id>"
+  - route: "/users/{{user_id}}"
     methods: ["GET"]
     response: "core.user"
 
-  - route: "/users/<user_id>/profile"
+  - route: "/users/{{user_id}}/profile"
     methods: ["GET"]
     response: "core.user_profile"
 
-  - route: "/users/<user_id>/permissions"
+  - route: "/users/{{user_id}}/permissions"
     methods: ["GET"]
     response: "core.user_permissions"
 
-  - route: "/users/<user_id>/settings"
+  - route: "/users/{{user_id}}/settings"
     methods: ["GET"]
     response: "core.user_settings"
 
-  - route: "/users/<user_id>/delete"
+  - route: "/users/{{user_id}}/delete"
     methods: ["DELETE"]
     response: "core.user"
 
-  - route: "/users/<user_id>/private"
+  - route: "/users/{{user_id}}/private"
     methods: ["GET"]
     response: "core.user_private"
 
   # Admin routes (will be restricted)
   - route: "/admin"
     methods: ["GET"]
-    response: "admin_dashboard"  # Legacy wrapper
+    response: "core.admin_dashboard"
 
-  - route: "/admin/<admin_id>"
+  - route: "/admin/{{admin_id}}"
     methods: ["GET"]
     response: "core.admin"
 
   - route: "/admin/dashboard"
     methods: ["GET"]
-    response: "admin_dashboard"  # Legacy wrapper
+    response: "core.admin_dashboard"
 
-  - route: "/admin/<admin_id>/dangerous"
+  - route: "/admin/{{admin_id}}/dangerous"
     methods: ["GET", "POST"]
-    response: "admin_dangerous"  # Legacy warning
+    response: "core.admin_dangerous"
 
   # System configuration routes (will be restricted)
-  - route: "/system/<system_id>/config"
+  - route: "/system/{{system_id}}/config"
     methods: ["GET"]
     response: "core.system_config"
 

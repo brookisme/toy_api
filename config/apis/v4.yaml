@@ -7,25 +7,25 @@ routes:
   # Using core objects for consistency
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"  # Legacy wrapper
+    response: "core.user_list"
 
-  - route: "/users/<user_id>"
+  - route: "/users/{{user_id}}"
     methods: ["GET"]
     response: "core.user"
 
-  - route: "/users/<user_id>/profile"
+  - route: "/users/{{user_id}}/profile"
     methods: ["GET"]
     response: "core.user_profile"
 
-  - route: "/users/<user_id>/posts"
+  - route: "/users/{{user_id}}/posts"
     methods: ["GET"]
-    response: "user_posts"  # Legacy wrapper
+    response: "core.user_posts"
 
   - route: "/posts"
     methods: ["GET"]
-    response: "post_list"  # Legacy wrapper
+    response: "core.post_list"
 
-  - route: "/posts/<post_id>"
+  - route: "/posts/{{post_id}}"
     methods: ["GET"]
     response: "core.post"
 
@@ -34,22 +34,22 @@ routes:
     response: "core.health_check"
 
   # Additional routes that should be blocked by api-box whitelist
-  - route: "/users/<user_id>/settings"
+  - route: "/users/{{user_id}}/settings"
     methods: ["GET"]
     response: "core.user_settings"
 
-  - route: "/users/<user_id>/permissions"
+  - route: "/users/{{user_id}}/permissions"
     methods: ["GET"]
     response: "core.user_permissions"
 
   - route: "/admin"
     methods: ["GET"]
-    response: "admin_dashboard"  # Legacy wrapper
+    response: "core.admin_dashboard"
 
-  - route: "/admin/<admin_id>"
+  - route: "/admin/{{admin_id}}"
     methods: ["GET"]
     response: "core.admin"
 
-  - route: "/system/<system_id>/config"
+  - route: "/system/{{system_id}}/config"
     methods: ["GET"]
     response: "core.system_config"
