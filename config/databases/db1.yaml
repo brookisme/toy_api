@@ -22,7 +22,7 @@ tables:
     object: "core.user_permissions"
     user_id: [[user_id]]
 
-  # Custom table (old syntax) - regions don't have a core object
+  # Custom table definition - regions don't have a core object
   regions:
     region_name: [[region_name]]
     area: CHOOSE[[1000-9000]]
