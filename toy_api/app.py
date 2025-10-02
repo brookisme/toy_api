@@ -11,6 +11,7 @@ License: CC-BY-4.0
 #
 # IMPORTS
 #
+import re
 from typing import Any, Dict, Optional
 
 import yaml
@@ -32,6 +33,7 @@ def create_app(config_path: Optional[str] = None) -> Flask:
     Returns:
         Configured Flask application.
     """
+    print('CREATING APP', config_path)
     app = Flask(__name__)
 
     # Load configuration
@@ -81,15 +83,17 @@ def _get_default_config() -> Dict[str, Any]:
         "description": "Default toy API with basic routes",
         "port": 8000,
         "routes": [
-            {"route": "/", "methods": ["GET"], "response": "api_info"},
-            {"route": "/users", "methods": ["GET"], "response": "user_list"},
-            {"route": "/users/<user_id>", "methods": ["GET"], "response": "user_detail"},
-            {"route": "/health", "methods": ["GET"], "response": "health_check"},
+            {"route": "/", "methods": ["GET"], "response": "core.api_info"},
+            {"route": "/users", "methods": ["GET"], "response": "core.user_list"},
+            {"route": "/users/{{user_id}}", "methods": ["GET"], "response": "core.user"},
+            {"route": "/health", "methods": ["GET"], "response": "core.health_check"},
         ]
     }
 
 
 def _register_routes(app: Flask, config: Dict[str, Any]) -> None:
+    print('_register_routes', app, config)
+
     """Register routes from configuration.
 
     Args:
@@ -122,25 +126,44 @@ def _register_routes(app: Flask, config: Dict[str, Any]) -> None:
         methods = route_config.get("methods", ["GET"])
         response_type = route_config["response"]
 
+        # Convert {{var}} notation to Flask <var> notation
+        flask_route = _convert_route_notation(route)
+
         # Create handler function
         handler = _create_route_handler(response_type, route)
 
         # Register route with unique endpoint name
-        endpoint_name = f"route_{route.replace('/', '_').replace('<', '').replace('>', '')}"
-        app.add_url_rule(route, endpoint=endpoint_name, view_func=handler, methods=methods)
+        endpoint_name = f"route_{flask_route.replace('/', '_').replace('<', '').replace('>', '')}"
+        app.add_url_rule(flask_route, endpoint=endpoint_name, view_func=handler, methods=methods)
 
 
-def _create_route_handler(response_type: str, path: str):
+def _convert_route_notation(route: str) -> str:
+    """Convert {{var}} notation to Flask's <var> notation.
+
+    Args:
+        route: Route with {{var}} placeholders.
+
+    Returns:
+        Route with <var> Flask placeholders.
+    """
+    # Convert {{variable}} to <variable>
+    return re.sub(r'\{\{(\w+)\}\}', r'<\1>', route)
+
+
+def _create_route_handler(response_type, path: str):
     """Create a handler function for a route.
 
     Args:
-        response_type: Type of response to generate.
+        response_type: Object reference (str) or explicit response (dict/list).
         path: Route path for context.
 
     Returns:
         Handler function that returns JSON response.
     """
+    print('_create_route_handler!!!!!!!!!!', response_type)
+    print('_create_route_handler!!!!!!!!!!', path)
     def handler(**kwargs):
+        print('HANDLER!!!!!!!!!!', kwargs)
         response_data = generate_response(response_type, kwargs, path)
         return jsonify(response_data)
 
