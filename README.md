@@ -41,20 +41,20 @@ description: Simple test API
 port: 1234
 
 routes:
-  - path: "/"
+  - route: "/"
     methods: ["GET"]
     response: "api_info"
 
-  - path: "/users"
+  - route: "/users"
     methods: ["GET"]
     response: "user_list"
 
-  - path: "/users/{{user_id}}"
+  - route: "/users/{{user_id}}"
     methods: ["GET"]
     response: "user_detail"
 ```
 
-Running `toy_api start example` will launch a Flask API filled with dummy data at `http://127.0.0.1:1234`:
+Running `toy-api start example` will launch a Flask API filled with dummy data at `http://127.0.0.1:1234`:
 
 - `/` - API metadata
 - `/users` - List of users
@@ -143,6 +143,8 @@ toy_api database example_db --tables users,permissions
 toy_api database example_db --dest output/ --force
 ```
 
+**For more details**, see the [CLI Reference Wiki](https://github.com/yourusername/toy_api/wiki/CLI-Reference).
+
 ---
 
 # CONFIGURATION AND SYNTAX
@@ -182,15 +184,15 @@ description: Simple test API
 port: 1234
 
 routes:
-  - path: "/"
+  - route: "/"
     methods: ["GET"]
     response: "api_info"
 
-  - path: "/users"
+  - route: "/users"
     methods: ["GET"]
     response: "user_list"
 
-  - path: "/users/{{user_id}}"
+  - route: "/users/{{user_id}}"
     methods: ["GET"]
     response: "user_detail"
 ```
@@ -215,7 +217,7 @@ If a configured port is unavailable, Toy API automatically selects the next avai
 ### Multiple Methods
 
 ```yaml
-- path: "/users/{{user_id}}"
+- route: "/users/{{user_id}}"
   methods: ["GET", "POST", "PUT"]
   response: "user_detail"
 ```
@@ -239,6 +241,8 @@ Toy API searches for configs in priority order:
 
 1. **Local configs** - `toy_api_config/*.yaml`
 2. **Package configs** - Built-in configurations
+
+**For more details**, see the [API Configuration Wiki](https://github.com/yourusername/toy_api/wiki/API-Configuration).
 
 ---
 
@@ -388,6 +392,8 @@ tables:
     area: CHOOSE[[1000-9000]]
     population: int
 ```
+
+**For more details**, see the [Table Generation Syntax Wiki](https://github.com/yourusername/toy_api/wiki/Table-Generation-Syntax).
 
 ---
 
