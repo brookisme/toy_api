@@ -381,6 +381,65 @@ tables:
     user_id: [[user_id]]
 ```
 
+#### Object-Based Data Generation (NEW!)
+
+Define reusable object templates for cleaner configs:
+
+**Define objects** in `config/objects/` or `toy_api_config/objects/`:
+
+```yaml
+# config/objects/my_objects.yaml
+user:
+  user_id: UNIQUE[int]
+  name: NAME
+  email: str
+  active: bool
+
+post:
+  post_id: UNIQUE[int]
+  title: POST_TITLE
+  content: str
+  tags: POST_TAGS[3]
+```
+
+**Use objects** in table definitions:
+
+```yaml
+tables:
+  # Reference object
+  users[[10]]:
+    object: "my_objects.user"
+
+  # Reference object with overrides
+  users_with_region[[10]]:
+    object: "my_objects.user"
+    user_id: [[shared_user_id]]  # Override field
+    region: LOCATION              # Add new field
+```
+
+**Built-in objects** in `config/objects/core.yaml`:
+- `core.user` - Basic user
+- `core.user_profile` - Extended user profile
+- `core.user_permissions` - User permissions
+- `core.post` - Blog post
+- `core.health_check` - Health check response
+- And more...
+
+**Use in API responses**:
+
+```yaml
+routes:
+  - route: "/users/{{user_id}}"
+    methods: ["GET"]
+    response: "core.user"  # Object-based response!
+```
+
+**Benefits**:
+- Reusable definitions across tables and APIs
+- Consistent data structure
+- Override/extend as needed
+- **Fully backward compatible** - old syntax still works!
+
 #### Complete Example
 
 ```yaml
