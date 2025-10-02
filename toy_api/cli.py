@@ -146,7 +146,7 @@ def list_configs(apis: bool, tables: bool) -> None:
 @cli.command()
 @click.argument("database_config", type=str)
 @click.option("--tables", type=str, help="Comma-separated list of tables to generate (default: all)")
-@click.option("--dest", "-d", type=str, help="Destination directory (default: tables/)")
+@click.option("--dest", "-d", type=str, help="Destination directory (default: databases/<config_path>/)")
 @click.option("--type", "-t", type=click.Choice(['parquet', 'csv', 'json', 'ld-json']),
               default='parquet', help="Output file format")
 @click.option("--force", "-f", is_flag=True, help="Overwrite existing files")
@@ -177,7 +177,25 @@ def database(database_config: str, tables: Optional[str], dest: Optional[str],
 
         # Determine destination
         if dest is None:
-            dest = "tables"
+            # Derive output path from config path structure
+            # toy_api_config/databases/test_db.yaml -> databases/test_db/
+            # toy_api_config/databases/versioned_db/1.2.yaml -> databases/versioned_db/1.2/
+            config_path_obj = Path(config_path)
+
+            # Get the part after "databases/"
+            parts = config_path_obj.parts
+            if 'databases' in parts:
+                db_index = parts.index('databases')
+                # Get everything after 'databases' and before the .yaml file
+                db_path_parts = parts[db_index + 1:]
+                # Remove .yaml extension from last part
+                db_path_parts = list(db_path_parts)
+                db_path_parts[-1] = db_path_parts[-1].replace('.yaml', '')
+                # Construct destination: databases/test_db/ or databases/versioned_db/1.2/
+                dest = str(Path('databases') / Path(*db_path_parts))
+            else:
+                # Fallback if 'databases' not in path
+                dest = str(Path('databases') / config_path_obj.stem)
 
         dest_dir = Path(dest)
         dest_dir.mkdir(parents=True, exist_ok=True)
