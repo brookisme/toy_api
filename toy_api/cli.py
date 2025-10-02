@@ -13,7 +13,7 @@ License: CC-BY-4.0
 #
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import click
 
