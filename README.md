@@ -59,15 +59,15 @@ port: 1234
 routes:
   - route: "/"
     methods: ["GET"]
-    response: "api_info"
+    response: "core.api_info"
 
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"
+    response: "core.user_list"
 
   - route: "/users/{{user_id}}"
     methods: ["GET"]
-    response: "user_detail"
+    response: "core.user"
 ```
 
 Running `toy-api start example` will launch a Flask API filled with dummy data at `http://127.0.0.1:1234`:
@@ -89,7 +89,7 @@ config:
 
 shared:
   user_id[[NB_USERS]]: UNIQUE[int]
-  region_name: CHOOSE[[Atlanta, San Francisco, New York]][[1]]
+  region_name: CHOOSE[[Atlanta, San Francisco, New York]][1]
 
 tables:
   users[[NB_USERS]]:
@@ -213,37 +213,44 @@ port: 1234
 routes:
   - route: "/"
     methods: ["GET"]
-    response: "api_info"
+    response: "core.api_info"
 
   - route: "/users"
     methods: ["GET"]
-    response: "user_list"
+    response: "core.user_list"
 
   - route: "/users/{{user_id}}"
     methods: ["GET"]
-    response: "user_detail"
+    response: "core.user"
 ```
 
 #### Variable Placeholders
 
-Routes use double curly braces `{{}}` for variable placeholders:
+Routes use double curly braces `{{}}` for variable placeholders (converted to Flask notation internally):
 
 - `/users`: Matches exactly "/users"
 - `/users/{{user_id}}`: Matches "/users/123", "/users/abc", etc.
 - `/users/{{user_id}}/posts`: Matches "/users/123/posts"
 
+**Note**: Use `{{variable}}` notation in config files. The system converts this to Flask's `<variable>` notation internally.
+
 #### Response Types
 
-Available built-in response generators:
+All responses use object-based generation with explicit namespace prefixes:
 
-- `api_info`: API metadata
-- `user_list`: List of users
-- `user_detail`: Single user details
-- `user_profile`: User profile
-- `user_permissions`: User permissions
-- `post_list`: List of posts
-- `post_detail`: Single post
-- `health_check`: Health status
+**Built-in core objects** (use `core.*` prefix):
+
+- `core.api_info`: API metadata
+- `core.user_list`: Paginated list of users
+- `core.user`: Single user details
+- `core.user_profile`: Extended user profile
+- `core.user_permissions`: User permissions and role
+- `core.user_settings`: User settings/preferences
+- `core.post_list`: Paginated list of posts
+- `core.post`: Single post details
+- `core.health_check`: Health status
+
+See [Object-Based Data Generation](#object-based-data-generation-new) for custom objects.
 
 
 #### Port Management
@@ -260,7 +267,7 @@ If a configured port is unavailable, Toy API automatically selects the next avai
 ```yaml
 - route: "/users/{{user_id}}"
   methods: ["GET", "POST", "PUT"]
-  response: "user_detail"
+  response: "core.user"
 ```
 
 #### Configuration Discovery
@@ -320,9 +327,9 @@ code: UNIQUE[str]    # unique_0000, unique_0001, ...
 ```yaml
 city: CHOOSE[[NYC, LA, SF]]              # Random city
 age: CHOOSE[[21-89]]                     # Random age 21-89
-tags: CHOOSE[[a, b, c, d]][[2]]         # Exactly 2 tags
-items: CHOOSE[[1-100]][[5]]             # 5 random numbers
-random: CHOOSE[[x, y, z]][[n]]          # 1-3 items
+tags: CHOOSE[[a, b, c, d]][2]           # Exactly 2 tags
+items: CHOOSE[[1-100]][5]               # 5 random numbers
+random: CHOOSE[[x, y, z]][n]            # 1-3 items
 ```
 
 #### Constants
@@ -356,7 +363,7 @@ Share columns across tables:
 ```yaml
 shared:
   user_id[10]: UNIQUE[int]          # Create 10 unique IDs
-  regions: CHOOSE[[A, B, C]][[1]]   # Create region list
+  regions: CHOOSE[[A, B, C]][1]     # Create region list
 
 tables:
   users[10]:
@@ -420,6 +427,20 @@ tables:
     region: LOCATION              # Add new field
 ```
 
+**Reference objects within objects**:
+
+When referencing objects or using `[[...]]` syntax in object definitions, **quote the value** to prevent YAML from parsing it as a list:
+
+```yaml
+# In config/objects/my_objects.yaml
+user_list:
+  users: "[[object.my_objects.user]][5]"  # CORRECT - quoted
+  total: 5
+
+# user_list:
+#   users: [[object.my_objects.user]][5]  # WRONG - parsed as nested list
+```
+
 **Built-in objects** in `config/objects/core.yaml`:
 - `core.user` - Basic user
 - `core.user_profile` - Extended user profile
@@ -456,7 +477,7 @@ config:
 
 shared:
   user_id[[NB_USERS]]: UNIQUE[int]
-  region_name: CHOOSE[[Atlanta, San Francisco, New York]][[1]]
+  region_name: CHOOSE[[Atlanta, San Francisco, New York]][1]
 
 tables:
   users[[NB_USERS]]:
