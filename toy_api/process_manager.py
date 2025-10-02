@@ -160,13 +160,13 @@ def get_all_configs_in_directory(directory: Optional[str] = None) -> List[Tuple[
     """Get all config files in a directory (including versioned subdirectories).
 
     Args:
-        directory: Directory to search. If None, searches toy_api_config/.
+        directory: Directory to search. If None, searches toy_api_config/apis/.
 
     Returns:
         List of (config_name, config_path) tuples.
     """
     if directory is None:
-        directory = "toy_api_config"
+        directory = "toy_api_config/apis"
 
     base_path = Path(directory)
     if not base_path.exists():
@@ -174,12 +174,8 @@ def get_all_configs_in_directory(directory: Optional[str] = None) -> List[Tuple[
 
     configs = []
 
-    # Find all .yaml files recursively
+    # Find all .yaml files recursively in apis directory
     for yaml_file in base_path.rglob("*.yaml"):
-        # Skip if in databases subdirectory
-        if "databases" in yaml_file.parts:
-            continue
-
         # Get relative path from base
         rel_path = yaml_file.relative_to(base_path)
 

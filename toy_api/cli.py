@@ -47,11 +47,13 @@ def init() -> None:
     """Initialize toy_api_config directory with example configuration."""
     if init_config_with_example():
         click.echo("✓ Created toy_api_config/ directory")
-        click.echo("✓ Copied v1.yaml to toy_api_config/example.yaml")
+        click.echo("✓ Created toy_api_config/databases/ subdirectory")
+        click.echo("✓ Created toy_api_config/apis/ subdirectory")
+        click.echo("✓ Copied v1.yaml to toy_api_config/apis/example.yaml")
         click.echo()
         click.echo("You can now customize example.yaml or add more configs:")
         click.echo("  toy_api start example    # Use the example config")
-        click.echo("  cp <other_configs> toy_api_config/")
+        click.echo("  cp <other_configs> toy_api_config/apis/")
     else:
         click.echo("Error: Could not initialize toy_api_config/ directory", err=True)
         sys.exit(1)
@@ -317,15 +319,15 @@ def _start_all_servers(directory: Optional[str], host: str, out_config: Optional
     """
     # Determine search directory
     if directory:
-        # Check if it's a subdirectory
+        # Check if it's a subdirectory (e.g., "versioned_remote")
         from pathlib import Path
-        subdir_path = Path(f"toy_api_config/{directory}")
+        subdir_path = Path(f"toy_api_config/apis/{directory}")
         if subdir_path.is_dir():
             search_dir = str(subdir_path)
         else:
-            search_dir = "toy_api_config"
+            search_dir = "toy_api_config/apis"
     else:
-        search_dir = "toy_api_config"
+        search_dir = "toy_api_config/apis"
 
     # Get all configs
     configs = get_all_configs_in_directory(search_dir)
@@ -335,7 +337,7 @@ def _start_all_servers(directory: Optional[str], host: str, out_config: Optional
         sys.exit(1)
 
     # Filter by prefix if directory was specified
-    if directory and not Path(f"toy_api_config/{directory}").is_dir():
+    if directory and not Path(f"toy_api_config/apis/{directory}").is_dir():
         configs = [(name, path) for name, path in configs if name.startswith(directory)]
         if not configs:
             click.echo(f"No configs found matching '{directory}'")
@@ -413,7 +415,7 @@ def _list_api_configs() -> None:
 
     # Show local configs first
     if configs["local"]:
-        click.echo("📁 Local configs (toy_api_config/):")
+        click.echo("📁 Local configs (toy_api_config/apis/):")
         for config_name in sorted(configs["local"]):
             try:
                 config_path, _ = find_config_path(config_name)
@@ -434,7 +436,7 @@ def _list_api_configs() -> None:
                 click.echo(f"  {config_name} (Error loading: {e})")
                 click.echo()
     else:
-        click.echo("📁 Local configs (toy_api_config/): None")
+        click.echo("📁 Local configs (toy_api_config/apis/): None")
         click.echo()
 
     # Show package configs

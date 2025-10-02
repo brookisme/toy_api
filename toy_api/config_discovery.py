@@ -33,13 +33,13 @@ def find_config_path(config_name: Optional[str] = None) -> tuple[str, str]:
 
     Config discovery priority:
     1. If no config_name provided, use default (toy_api_v1)
-    2. Check local project directory: ./toy_api_configs/config_name[.yaml]
-    3. Check package configs directory: configs/config_name[.yaml]
+    2. Check local project directory: ./toy_api_config/apis/config_name[.yaml]
+    3. Check package configs directory: config/apis/config_name[.yaml]
     4. Error if not found
 
     Supports versioned configs:
     - config_name can be "name/version" (e.g., "versioned_remote/1.2")
-    - Looks for toy_api_config/name/version.yaml
+    - Looks for toy_api_config/apis/name/version.yaml
 
     Args:
         config_name: Name of config file (with or without .yaml extension).
@@ -88,7 +88,7 @@ def find_config_path(config_name: Optional[str] = None) -> tuple[str, str]:
         return package_path, f"Using package config: {config_name}"
 
     # Not found anywhere
-    return "", f"Config '{config_name}' not found in {LOCAL_CONFIG_DIR}/ or package configs/"
+    return "", f"Config '{config_name}' not found in {LOCAL_CONFIG_DIR}/apis/ or package configs/apis/"
 
 
 def get_available_configs() -> dict[str, list[str]]:
@@ -103,7 +103,7 @@ def get_available_configs() -> dict[str, list[str]]:
     configs = {"local": [], "package": []}
 
     # Check local configs
-    local_dir = Path(LOCAL_CONFIG_DIR)
+    local_dir = Path(LOCAL_CONFIG_DIR) / "apis"
     if local_dir.exists() and local_dir.is_dir():
         # Single-file configs
         for config_file in local_dir.glob("*.yaml"):
@@ -122,19 +122,21 @@ def get_available_configs() -> dict[str, list[str]]:
     # Check package configs
     package_dir = _get_package_config_dir()
     if package_dir and package_dir.exists():
-        # Single-file configs
-        for config_file in package_dir.glob("*.yaml"):
-            configs["package"].append(config_file.stem)
-        for config_file in package_dir.glob("*.yml"):
-            configs["package"].append(config_file.stem)
+        apis_dir = package_dir / "apis"
+        if apis_dir.exists() and apis_dir.is_dir():
+            # Single-file configs
+            for config_file in apis_dir.glob("*.yaml"):
+                configs["package"].append(config_file.stem)
+            for config_file in apis_dir.glob("*.yml"):
+                configs["package"].append(config_file.stem)
 
-        # Versioned configs (subdirectories)
-        for subdir in package_dir.iterdir():
-            if subdir.is_dir():
-                for version_file in subdir.glob("*.yaml"):
-                    configs["package"].append(f"{subdir.name}/{version_file.stem}")
-                for version_file in subdir.glob("*.yml"):
-                    configs["package"].append(f"{subdir.name}/{version_file.stem}")
+            # Versioned configs (subdirectories)
+            for subdir in apis_dir.iterdir():
+                if subdir.is_dir():
+                    for version_file in subdir.glob("*.yaml"):
+                        configs["package"].append(f"{subdir.name}/{version_file.stem}")
+                    for version_file in subdir.glob("*.yml"):
+                        configs["package"].append(f"{subdir.name}/{version_file.stem}")
 
     return configs
 
@@ -158,7 +160,8 @@ def init_config_with_example() -> bool:
     This function:
     1. Creates toy_api_config/ directory (exists_ok=True)
     2. Creates toy_api_config/databases/ subdirectory
-    3. Copies the package's v1.yaml to toy_api_config/example.yaml
+    3. Creates toy_api_config/apis/ subdirectory
+    4. Copies the package's v1.yaml to toy_api_config/apis/example.yaml
 
     Returns:
         True if successful, False on error.
@@ -172,13 +175,17 @@ def init_config_with_example() -> bool:
         databases_dir = local_dir / "databases"
         databases_dir.mkdir(exist_ok=True)
 
-        # Step 3: Copy v1.yaml to example.yaml
+        # Step 3: Create apis subdirectory
+        apis_dir = local_dir / "apis"
+        apis_dir.mkdir(exist_ok=True)
+
+        # Step 4: Copy v1.yaml to apis/example.yaml
         package_dir = _get_package_config_dir()
         if not package_dir:
             return False
 
-        v1_source = package_dir / "v1.yaml"
-        example_target = local_dir / "example.yaml"
+        v1_source = package_dir / "apis" / "v1.yaml"
+        example_target = apis_dir / "example.yaml"
 
         if not v1_source.exists():
             return False
@@ -208,15 +215,15 @@ def _check_versioned_config(base_name: str, version: str, base_dir: str) -> Opti
     if not version.endswith(('.yaml', '.yml')):
         version = f"{version}.yaml"
 
-    # Check for versioned config: base_dir/base_name/version.yaml
-    versioned_path = Path(base_dir) / base_name / version
+    # Check for versioned config: base_dir/apis/base_name/version.yaml
+    versioned_path = Path(base_dir) / "apis" / base_name / version
     if versioned_path.exists() and versioned_path.is_file():
         return str(versioned_path)
 
     # Also try .yml extension if .yaml was requested
     if version.endswith('.yaml'):
         yml_version = version.replace('.yaml', '.yml')
-        yml_path = Path(base_dir) / base_name / yml_version
+        yml_path = Path(base_dir) / "apis" / base_name / yml_version
         if yml_path.exists() and yml_path.is_file():
             return str(yml_path)
 
@@ -246,13 +253,13 @@ def _check_local_config(config_name: str) -> Optional[str]:
     Returns:
         Full path if found, None otherwise.
     """
-    local_path = Path(LOCAL_CONFIG_DIR) / config_name
+    local_path = Path(LOCAL_CONFIG_DIR) / "apis" / config_name
     if local_path.exists() and local_path.is_file():
         return str(local_path)
 
     # Also try .yml extension if .yaml was requested
     if config_name.endswith('.yaml'):
-        yml_path = Path(LOCAL_CONFIG_DIR) / config_name.replace('.yaml', '.yml')
+        yml_path = Path(LOCAL_CONFIG_DIR) / "apis" / config_name.replace('.yaml', '.yml')
         if yml_path.exists() and yml_path.is_file():
             return str(yml_path)
 
@@ -272,13 +279,13 @@ def _check_package_config(config_name: str) -> Optional[str]:
     if not package_dir:
         return None
 
-    package_path = package_dir / config_name
+    package_path = package_dir / "apis" / config_name
     if package_path.exists() and package_path.is_file():
         return str(package_path)
 
     # Also try .yml extension if .yaml was requested
     if config_name.endswith('.yaml'):
-        yml_path = package_dir / config_name.replace('.yaml', '.yml')
+        yml_path = package_dir / "apis" / config_name.replace('.yaml', '.yml')
         if yml_path.exists() and yml_path.is_file():
             return str(yml_path)
 
