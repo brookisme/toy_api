@@ -119,22 +119,3 @@ JOBS: List[str] = [
     "Professional Belly Laugh Technician", "Magic Carpet Test Pilot", "Chief Giggling Scientist",
     "Professional Marshmallow Architect", "Rainbow Painting Specialist", "Chief Wonder Officer"
 ]
-
-# Default response type mappings
-DEFAULT_RESPONSES: Dict[str, Any] = {
-    "users": {"type": "list", "generator": "user_list"},
-    "users/{}": {"type": "object", "generator": "user_detail"},
-    "users/{}/profile": {"type": "object", "generator": "user_profile"},
-    "users/{}/permissions": {"type": "list", "generator": "user_permissions"},
-    "users/{}/posts": {"type": "list", "generator": "user_posts"},
-    "users/{}/settings": {"type": "object", "generator": "user_settings"},
-    "users/{}/private": {"type": "object", "generator": "user_private"},
-    "posts": {"type": "list", "generator": "post_list"},
-    "posts/{}": {"type": "object", "generator": "post_detail"},
-    "admin": {"type": "object", "generator": "admin_dashboard"},
-    "admin/{}": {"type": "object", "generator": "admin_detail"},
-    "admin/dashboard": {"type": "object", "generator": "admin_dashboard"},
-    "admin/{}/dangerous": {"type": "object", "generator": "admin_dangerous"},
-    "system/{}/config": {"type": "object", "generator": "system_config"},
-    "health": {"type": "object", "generator": "health_check"},
-}
