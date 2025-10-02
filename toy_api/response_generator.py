@@ -12,7 +12,7 @@ License: CC-BY-4.0
 #
 # IMPORTS
 #
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from toy_api import dummy_data_generator
 
@@ -20,78 +20,78 @@ from toy_api import dummy_data_generator
 #
 # PUBLIC
 #
-def generate_response(response_type: str, params: Dict[str, str], path: str) -> Dict[str, Any]:
+def generate_response(response_type: Union[str, Dict, list], params: Dict[str, str], path: str) -> Union[Dict[str, Any], list]:
     """Generate dummy response data based on response type.
 
-    All responses now use object-based generation from config/objects/*.yaml files.
-    Legacy response type names (without dots) are mapped to core.* objects.
+    Supports two types of responses:
+    1. Object-based: String reference to object (e.g., 'core.user', 'test.test_user')
+    2. Explicit: Direct dict/list response data from config
 
     Args:
-        response_type: Type of response to generate or object reference.
+        response_type: Object reference string OR explicit dict/list response.
         params: URL parameters extracted from the route.
         path: Route path for additional context.
 
     Returns:
-        Dictionary containing the generated response data.
+        Dictionary or list containing the response data.
     """
-    # Use hash of params for consistent generation
-    row_idx = hash(str(sorted(params.items()))) % 1000 if params else 0
+    # Handle explicit response (dict or list) - return as-is with param substitution
+    if isinstance(response_type, (dict, list)):
+        return _substitute_params(response_type, params)
 
-    # Try object-based generation (e.g., 'core.user', 'core.post', 'core.user_list')
-    if '.' in response_type:
+    # Handle object-based response (string reference)
+    if isinstance(response_type, str):
+        # Use hash of params for consistent generation
+        row_idx = hash(str(sorted(params.items()))) % 1000 if params else 0
+
+        # Generate response from object definition
+        print("HI!!!!!!!!!!!!!!!!!!", response_type)
         try:
             return dummy_data_generator.generate_object(
                 response_type,
                 params=params,
                 row_idx=row_idx
             )
-        except ValueError:
-            # Object not found, fall through to legacy mapping
-            pass
+        except ValueError as e:
+            # Object not found, return error response
+            return {
+                "error": "Response type not found",
+                "response_type": response_type,
+                "message": str(e),
+                "path": path,
+                "params": params
+            }
 
-    # Legacy response type mapping (for backward compatibility)
-    # Maps old names without dots to new core.* objects
-    legacy_mapping = {
-        "api_info": "core.api_info",
-        "user_list": "core.user_list",
-        "user_detail": "core.user",
-        "user_profile": "core.user_profile",
-        "user_permissions": "core.user_permissions",
-        "user_posts": "core.user_posts",
-        "user_settings": "core.user_settings",
-        "user_private": "core.user_private",
-        "post_list": "core.post_list",
-        "post_detail": "core.post",
-        "admin_dashboard": "core.admin_dashboard",
-        "admin_detail": "core.admin",
-        "admin_dangerous": "core.admin_dangerous",
-        "system_config": "core.system_config",
-        "health_check": "core.health_check",
+    # Unexpected type
+    return {
+        "error": "Invalid response type",
+        "response_type": str(type(response_type)),
+        "path": path
     }
-
-    if response_type in legacy_mapping:
-        try:
-            return dummy_data_generator.generate_object(
-                legacy_mapping[response_type],
-                params=params,
-                row_idx=row_idx
-            )
-        except ValueError:
-            pass
-
-    # Fallback: generate generic response
-    return _generate_generic_response(response_type, params, path)
 
 
 #
 # INTERNAL
 #
-def _generate_generic_response(response_type: str, params: Dict[str, str], path: str) -> Dict[str, Any]:
-    """Generate a generic response for unknown response types."""
-    return {
-        "message": f"Generic response for {response_type}",
-        "path": path,
-        "params": params,
-        "data": "dummy_data",
-        "timestamp": "2024-01-15T10:30:00Z"
-    }
+def _substitute_params(response_data: Union[Dict, list], params: Dict[str, str]) -> Union[Dict, list]:
+    """Substitute {{param}} placeholders in explicit response data.
+
+    Args:
+        response_data: Dict or list with potential {{param}} placeholders.
+        params: URL parameters to substitute.
+
+    Returns:
+        Response data with substituted parameters.
+    """
+    import json
+    import re
+
+    # Convert to JSON string, substitute, convert back
+    json_str = json.dumps(response_data)
+
+    # Replace {{param}} with actual values
+    for key, value in params.items():
+        pattern = r'\{\{' + key + r'\}\}'
+        json_str = re.sub(pattern, str(value), json_str)
+
+    return json.loads(json_str)
