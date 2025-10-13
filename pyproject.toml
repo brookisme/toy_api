@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -28,3 +28,13 @@ toy_api = { path = ".", editable = true }
 
 [tool.pixi.tasks]
 toy_api = "toy_api"
+
+[tool.pixi.environments]
+default = { features = [] }
+dev = { features = ["dev"] }
+
+[tool.pixi.feature.dev.dependencies]
+twine = "*"
+
+[tool.pixi.feature.dev.pypi-dependencies]
+build = "*"
