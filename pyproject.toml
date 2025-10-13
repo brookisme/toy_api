@@ -39,7 +39,7 @@ packages = ["toy_api"]
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64"]
+platforms = ["osx-arm64", "linux-64", "osx-64", "linux-aarch64"]
 
 [tool.pixi.pypi-dependencies]
 toy_api = { path = ".", editable = true }
