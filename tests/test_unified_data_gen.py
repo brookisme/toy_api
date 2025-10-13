@@ -4,7 +4,7 @@ Test Unified Data Generation System
 
 Tests both old and new syntax for table generation and object-based responses.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

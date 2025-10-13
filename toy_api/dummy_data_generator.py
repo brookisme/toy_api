@@ -6,7 +6,7 @@ Unified data generation system for both database tables and API responses.
 Supports object definitions, config variables, shared data, and various data
 types and verbs (UNIQUE, CHOOSE) with constants from toy_api.constants.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

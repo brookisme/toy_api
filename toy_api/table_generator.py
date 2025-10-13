@@ -6,7 +6,7 @@ This module provides backward compatibility by wrapping the unified
 dummy_data_generator module. All new code should import from
 dummy_data_generator directly.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

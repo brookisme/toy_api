@@ -5,7 +5,7 @@ Demo setup script for toy API v2
 
 Shows the available configurations and demonstrates the setup.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

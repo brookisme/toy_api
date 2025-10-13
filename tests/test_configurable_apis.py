@@ -5,7 +5,7 @@ Test script for configurable toy APIs
 
 Tests that the YAML-configured APIs work correctly and return expected data.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

@@ -1,5 +1,5 @@
 # Example database using object references
-# License: CC-BY-4.0
+# License: BSD 3-Clause
 
 name: example_with_objects
 description: Example showing new object-based syntax

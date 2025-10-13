@@ -1,5 +1,5 @@
 # Core object definitions for Toy API
-# License: CC-BY-4.0
+# License: BSD 3-Clause
 
 # Basic user object
 user:

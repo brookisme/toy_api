@@ -4,7 +4,7 @@ Process Manager for Toy API
 
 Manages background toy API server processes with start/stop tracking.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 #

@@ -2,7 +2,7 @@
 """
 Quick validation of toy_api base endpoint changes
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 """
 import sys
 sys.path.insert(0, '/workspace/toy_api')

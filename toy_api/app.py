@@ -4,7 +4,7 @@ Flask Application for Toy API
 
 YAML-configurable API with dummy data for testing API Box route restrictions.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

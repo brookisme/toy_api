@@ -2,7 +2,7 @@
 """
 Test script for name and job updates
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 """
 import sys
 sys.path.insert(0, '/workspace/toy_api')

@@ -622,4 +622,4 @@ pixi add --pypi $(cat pypi_package_names.txt)
 
 ## License
 
-CC-BY-4.0
+BSD 3-Clause

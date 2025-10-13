@@ -5,7 +5,7 @@ Constants for Toy API
 Contains all constant values used throughout the application including dummy data
 and configuration defaults.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

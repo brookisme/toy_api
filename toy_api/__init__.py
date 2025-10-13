@@ -4,7 +4,7 @@ Toy API Module
 
 Simple Flask API for testing API Box functionality.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

@@ -4,7 +4,7 @@ Port Utility Functions for Toy API
 
 Handles port availability checking and automatic port selection.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

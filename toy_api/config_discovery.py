@@ -4,7 +4,7 @@ Config Discovery for Toy API
 
 Handles finding configuration files in project-local directories or package defaults.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 

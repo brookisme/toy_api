@@ -1,5 +1,5 @@
 # Example API config using object-based responses
-# License: CC-BY-4.0
+# License: BSD 3-Clause
 
 name: example-api-objects
 description: Example API using object-based response syntax

@@ -5,7 +5,7 @@ CLI for Toy API
 
 Launch configurable toy APIs from YAML configuration files and generate dummy data tables.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 #

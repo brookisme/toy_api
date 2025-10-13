@@ -5,7 +5,7 @@ Response Generator for Toy API
 Generates dummy response data for various API endpoints to enable realistic testing
 of API Box route restrictions and functionality.
 
-License: CC-BY-4.0
+License: BSD 3-Clause
 
 """
 
