@@ -28,7 +28,6 @@ dependencies = [
     "flask",
     "click",
     "pyyaml",
-    "pyarrow"
 ]
 
 [project.scripts]
@@ -36,6 +35,9 @@ toy-api = "toy_api.cli:main"
 
 [tool.setuptools]
 packages = ["toy_api"]
+
+[tool.setuptools.package-data]
+toy_api = ["config/*.yaml", "config/**/*.yaml"]
 
 [tool.pixi.project]
 channels = ["conda-forge"]
@@ -56,3 +58,6 @@ twine = "*"
 
 [tool.pixi.feature.dev.pypi-dependencies]
 build = "*"
+
+[tool.pixi.dependencies]
+pyarrow = ">=21.0.0,<22"
