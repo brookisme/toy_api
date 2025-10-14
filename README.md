@@ -4,6 +4,7 @@ Easily configurable test API servers and dummy Database generation for developme
 
 --- 
 
+- [Install](#install)
 - [Overview](#overview)
   - [Toy Api](#toy-api)
   - [Toy Database](#toy-database)
@@ -16,7 +17,7 @@ Easily configurable test API servers and dummy Database generation for developme
 - [Using Toy API in Your Own Projects](#using-toy-api-in-your-own-projects)
   - [Basic Integration](#basic-integration)
   - [Framework Examples](#framework-examples)
-- [Install/Requirements](#installrequirements)
+- [Requirements](#requirements)
 - [License](#license)
 
 ---
@@ -30,6 +31,22 @@ Easily configurable test API servers and dummy Database generation for developme
 - **Version Support**: Handle multiple API versions in subdirectories
 - **Port Auto-Selection**: Automatic port selection when configured port is unavailable
 - **Flexible Responses**: Built-in response types with dynamic data generation
+
+---
+
+## Install
+
+**FROM PYPI**
+
+```bash
+pip install toy_api
+```
+
+**FROM CONDA**
+
+```bash
+ conda install -c conda-forge toy_api
+```
 
 ---
 
@@ -583,7 +600,7 @@ def test_users_endpoint(toy_api_client):
 
 ---
 
-## Install/Requirements
+## Requirements
 
 Requirements are managed through a [Pixi](https://pixi.sh/latest) "project" (similar to a conda environment). After pixi is installed use `pixi run <cmd>` to ensure the correct project is being used. For example,
 
